@@ -1,0 +1,22 @@
+[
+    {
+        "prompt": "What is the capital of France?",
+        "expected": "The capital of France is Paris."
+    },
+    {
+        "prompt": "What does CPU stand for?",
+        "expected": "CPU stands for Central Processing Unit."
+    },
+    {
+        "prompt": "What is Python?",
+        "expected": "Python is a high-level, interpreted programming language known for its simplicity."
+    },
+    {
+        "prompt": "What is machine learning?",
+        "expected": "Machine learning is a subset of AI where systems learn from data to improve performance."
+    },
+    {
+        "prompt": "What is Docker?",
+        "expected": "Docker is a platform for developing, shipping, and running applications in containers."
+    }
+]
