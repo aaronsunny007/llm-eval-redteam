@@ -178,9 +178,9 @@ re-run the benchmark.
 
 ## Limitations
 
-- **Judge bias.** By default the judge and guards use the same model family as the
-  target. Validation against human labels measures how much this matters; using a judge
-  from a different family is recommended.
+- **Judge bias.** The reference benchmark grades Mistral 7B with Qwen 2.5 7B, a different
+  model family, to avoid self-preference. The guards still run on the target model.
+  Validation against human labels measures how well the judge holds up.
 - **Guard–judge overlap.** The output guard and the judge are both LLM-based. They use
   different prompts and, ideally, different models; agreement with human labels is the
   check that the output guard isn't simply graded by itself.

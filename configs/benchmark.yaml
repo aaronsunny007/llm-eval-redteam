@@ -10,9 +10,8 @@ target:
 # Guards default to the target model. A different model can be set here.
 guard_model: {provider: ollama, model: mistral, max_tokens: 160}
 judge:
-  # A judge from a different model family avoids self-preference bias.
-  # Override with e.g. --set judge.model.model=qwen2.5:7b
-  model: {provider: ollama, model: mistral, max_tokens: 300}
+  # A different model family from the target (Mistral), to avoid self-preference bias.
+  model: {provider: ollama, model: "qwen2.5:7b", max_tokens: 300}
 defences: [none, hardened_prompt, input_guard, output_guard, layered]
 gold_labels: data/labels/gold.jsonl
 output_dir: results/finassist-mistral
