@@ -1,9 +1,26 @@
+# environments
+.venv/
 venv/
-__pycache__/
-*.pyc
 .env
-mlruns/
+
+# python
+__pycache__/
+*.py[cod]
 *.egg-info/
+build/
+dist/
 .pytest_cache/
-mlflow.db
+.ruff_cache/
+
+# experiment tracking
 mlruns/
+mlflow.db
+
+# run outputs: only curated runs are committed (see results/README.md)
+results/_*/
+redteam-results/
+selftest-results/
+
+# tool state
+.deepeval/
+.streamlit/secrets.toml

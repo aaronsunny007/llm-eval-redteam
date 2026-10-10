@@ -1,0 +1,54 @@
+[build-system]
+requires = ["hatchling>=1.24"]
+build-backend = "hatchling.build"
+
+[project]
+name = "llm-redteam"
+version = "1.0.0"
+description = "A data-driven red-teaming harness for LLM applications: attack sets, a calibrated LLM judge, defence benchmarking and a CI gate."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Aaron" }]
+keywords = ["llm", "red-teaming", "prompt-injection", "ai-safety", "evaluation", "llm-as-a-judge"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Topic :: Security",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "pydantic>=2.6",
+    "httpx>=0.27",
+    "pyyaml>=6.0",
+    "typer>=0.12",
+    "rich>=13.7",
+]
+
+[project.optional-dependencies]
+dashboard = ["streamlit>=1.36", "pandas>=2.0"]
+mlflow = ["mlflow-skinny>=2.12"]
+dev = ["pytest>=8.0", "ruff>=0.5"]
+
+[project.scripts]
+llm-redteam = "llm_redteam.cli:app"
+
+[project.urls]
+Homepage = "https://github.com/aaronsunny007/llm-eval-redteam"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/llm_redteam"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"data" = "llm_redteam/_data"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+ignore = ["E501"]  # line length is owned by `ruff format`
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
