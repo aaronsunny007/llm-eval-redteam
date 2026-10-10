@@ -1,0 +1,37 @@
+# Drop into Ledger's repo as .github/workflows/redteam.yml and add redteam.yaml
+# (start from configs/ci-http-example.yaml in llm-eval-redteam).
+name: Red-team gate
+
+on:
+  pull_request:
+  schedule:
+    - cron: "0 3 * * 1"   # weekly, catches model/provider drift
+  workflow_dispatch:
+
+jobs:
+  redteam:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start Ledger
+        run: |
+          docker compose up -d ledger
+          for i in $(seq 1 60); do curl -sf http://localhost:8000/health && break; sleep 2; done
+
+      - uses: aaronsunny007/llm-eval-redteam@v1.0.0
+        with:
+          config: redteam.yaml
+          # Judge model. On CPU runners prefer a small model, or point judge.model at an
+          # OpenAI-compatible endpoint and pass the key as a secret.
+          install-ollama: "true"
+          ollama-models: "mistral"
+        env:
+          LEDGER_API_TOKEN: ${{ secrets.LEDGER_API_TOKEN }}
+
+      - name: Publish test results
+        if: always()
+        uses: mikepenz/action-junit-report@v4
+        with:
+          report_paths: redteam-results/junit.xml

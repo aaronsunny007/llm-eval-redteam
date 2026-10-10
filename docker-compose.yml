@@ -1,17 +1,28 @@
-version: '3.8'
-
+# docker compose up -d ollama dashboard
+# docker compose run --rm redteam run configs/benchmark.yaml
 services:
-  api:
-    build: .
-    ports:
-      - "8000:8000"
+  ollama:
+    image: ollama/ollama:latest
     volumes:
-      - ./mlruns:/app/mlruns
+      - ollama:/root/.ollama
+    ports:
+      - "11434:11434"
+
+  redteam:
+    build: .
+    depends_on: [ollama]
+    volumes:
+      - ./results:/app/results
+      - ./data/labels:/app/data/labels
 
   dashboard:
     build: .
-    command: streamlit run dashboard/app.py --server.port 8501
+    entrypoint: ["streamlit", "run", "dashboard/app.py", "--server.port=8501", "--server.address=0.0.0.0"]
     ports:
       - "8501:8501"
-    depends_on:
-      - api
+    volumes:
+      - ./results:/app/results
+      - ./data/labels:/app/data/labels
+
+volumes:
+  ollama:

@@ -1,0 +1,75 @@
+name: "LLM Red-Team Gate"
+description: "Red-team an LLM application with versioned attack sets and an LLM judge; fail the build when safety thresholds are crossed."
+author: "aaronsunny007"
+branding:
+  icon: shield
+  color: red
+
+inputs:
+  config:
+    description: "Path to the run config YAML in your repository."
+    required: true
+  args:
+    description: "Extra arguments for `llm-redteam ci`, e.g. `--set target.url=http://localhost:9000/ask`."
+    required: false
+    default: ""
+  python-version:
+    description: "Python version to use."
+    required: false
+    default: "3.12"
+  install-ollama:
+    description: "Install Ollama on the runner (for a local judge/guard model)."
+    required: false
+    default: "false"
+  ollama-models:
+    description: "Space-separated Ollama models to pull when install-ollama is true."
+    required: false
+    default: ""
+  artifact-name:
+    description: "Name of the uploaded results artifact."
+    required: false
+    default: "redteam-results"
+
+outputs:
+  results-dir:
+    description: "Directory containing report.md, summary.json, junit.xml and transcripts."
+    value: ${{ steps.dir.outputs.dir }}
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install llm-redteam
+      shell: bash
+      run: python -m pip install --quiet "${{ github.action_path }}"
+
+    - name: Install Ollama
+      if: inputs.install-ollama == 'true'
+      shell: bash
+      run: |
+        curl -fsSL https://ollama.com/install.sh | sh
+        (ollama serve > /tmp/ollama.log 2>&1 &)
+        for i in $(seq 1 30); do curl -sf http://localhost:11434/api/tags >/dev/null && break; sleep 1; done
+        for m in ${{ inputs.ollama-models }}; do ollama pull "$m"; done
+
+    - name: Resolve results directory
+      id: dir
+      shell: bash
+      run: |
+        dir=$(python -c "from llm_redteam.config import load_config; print(load_config('${{ inputs.config }}').out)")
+        echo "dir=$dir" >> "$GITHUB_OUTPUT"
+
+    - name: Run red-team gate
+      shell: bash
+      run: llm-redteam ci "${{ inputs.config }}" ${{ inputs.args }}
+
+    - name: Upload results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.artifact-name }}
+        path: ${{ steps.dir.outputs.dir }}
+        if-no-files-found: warn
