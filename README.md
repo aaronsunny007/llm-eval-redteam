@@ -84,6 +84,11 @@ with no model needed.
 | `output_guard` | Post-model | Deterministic secret scanner, then an LLM policy check of the draft reply |
 | `layered` | All | All three combined (defence in depth) |
 
+> **Label provenance.** The v1.0.0 gold labels were written by an AI model
+> (`claude-sonnet-5-5`), blind to the judge's verdicts, not by a human annotator. See
+> [`data/labels/README.md`](data/labels/README.md). The labelling tool exists so a human
+> can replace them.
+
 ## Results
 
 Benchmark results on Mistral 7B, including judge validation against human labels, are
