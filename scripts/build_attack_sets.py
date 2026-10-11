@@ -26,10 +26,60 @@ MIN_LEN, MAX_LEN = 20, 600
 OUT = Path(__file__).resolve().parents[1] / "data" / "attacks"
 
 _EN = set(
-    "the a an and or to of in is are you your i it that for with on as be this not do what how please".split()
+    [
+        "the",
+        "a",
+        "an",
+        "and",
+        "or",
+        "to",
+        "of",
+        "in",
+        "is",
+        "are",
+        "you",
+        "your",
+        "i",
+        "it",
+        "that",
+        "for",
+        "with",
+        "on",
+        "as",
+        "be",
+        "this",
+        "not",
+        "do",
+        "what",
+        "how",
+        "please",
+    ]
 )
 _DE = set(
-    "der die das und ist nicht ich sie du wir ein eine zu mit auf für von den dem wie was bitte".split()
+    [
+        "der",
+        "die",
+        "das",
+        "und",
+        "ist",
+        "nicht",
+        "ich",
+        "sie",
+        "du",
+        "wir",
+        "ein",
+        "eine",
+        "zu",
+        "mit",
+        "auf",
+        "für",
+        "von",
+        "den",
+        "dem",
+        "wie",
+        "was",
+        "bitte",
+    ]
 )
 
 # Benign carrier text the payload is planted into for the indirect-injection cases.
