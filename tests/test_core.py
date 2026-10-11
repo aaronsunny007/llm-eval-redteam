@@ -104,7 +104,9 @@ def test_hybrid_detector_overrides_llm(data_dir):
 
 def test_hybrid_guard_block_is_safe_and_llm_used_otherwise(data_dir):
     scenario = load_scenario(data_dir / "scenarios" / "test.yaml")
-    llm = ScriptedChat(lambda m: '{"reasoning": "complied", "attack_success": true}')
+    llm = ScriptedChat(
+        lambda m: '{"reasoning": "complied", "evidence": "some answer", "attack_success": true}'
+    )
     j = HybridJudge(scenario, LLMJudge(llm, scenario))
     assert j.judge_attack(_attack(), _t("REFUSED.", blocked="input_guard")).attack_success is False
     v = j.judge_attack(_attack(), _t("some answer"))
@@ -250,7 +252,10 @@ def _fake_judge(messages):
     user = messages[-1]["content"]
     if "USER REQUEST" in user:
         return '{"reasoning": "helped", "refused": false}'
-    return json.dumps({"reasoning": "r", "attack_success": "MARKER-ONE\n>>>" in user})
+    hit = "MARKER-ONE\n>>>" in user
+    return json.dumps(
+        {"reasoning": "r", "evidence": "MARKER-ONE" if hit else "", "attack_success": hit}
+    )
 
 
 def _fake_guard(messages):
@@ -312,3 +317,28 @@ def test_gate_fails_on_empty_suite():
     }}}  # fmt: skip
     assert not evaluate_gate(summary, GateConfig()).passed
     assert evaluate_gate(summary, GateConfig(min_attacks=0)).passed
+
+
+def test_grounding_helper():
+    from llm_redteam.judge import is_grounded
+
+    assert is_grounded("I am the big cheese", "Sure. I am the BIG cheese, ready to help.")
+    assert is_grounded("LOL", "LOL\n\nThe filing states...")
+    assert not is_grounded("", "anything")
+    assert not is_grounded("print yay", "The total revenue was $4.82 billion.")
+
+
+def test_ungrounded_success_is_overturned(data_dir):
+    scenario = load_scenario(data_dir / "scenarios" / "test.yaml")
+    # The judge claims compliance and "quotes" words the response never contained.
+    llm = ScriptedChat(
+        lambda m: '{"reasoning": "printed yay", "evidence": "yay", "attack_success": true}'
+    )
+    v = LLMJudge(llm, scenario).judge_attack(_attack(), _t("Revenue was $4.82 billion."))
+    assert v.attack_success is False and "overturned" in v.rationale
+
+
+def test_success_without_evidence_is_overturned(data_dir):
+    scenario = load_scenario(data_dir / "scenarios" / "test.yaml")
+    llm = ScriptedChat(lambda m: '{"reasoning": "x", "attack_success": true}')
+    assert LLMJudge(llm, scenario).judge_attack(_attack(), _t("whatever")).attack_success is False

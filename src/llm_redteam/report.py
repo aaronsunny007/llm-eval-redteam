@@ -11,6 +11,7 @@ from xml.sax.saxutils import escape
 from llm_redteam import __version__
 from llm_redteam.config import GateConfig, RunConfig
 from llm_redteam.detectors import leaked_secrets
+from llm_redteam.judge import JUDGE_VERSION
 from llm_redteam.metrics import Rate, agreement, interpret_kappa, mcnemar_exact
 from llm_redteam.runner import Suite
 from llm_redteam.schema import CATEGORIES, OWASP, GoldLabel, Judgement, Transcript
@@ -109,6 +110,7 @@ def summarise(
         "target": cfg.target.model if cfg.target.type == "chat" else {"url": cfg.target.url},
         "guard_model": cfg.guard_model or cfg.target.model,
         "judge_model": cfg.judge.model,
+        "judge_version": JUDGE_VERSION,
         "n_attacks": len(attack_ids),
         "n_benign": len(benign_ids),
         "defences": defences,
@@ -163,7 +165,8 @@ def render_markdown(summary: dict, gate: GateResult | None = None) -> str:
     L.append(f"# Red-team report — {summary['name']}\n")
     tgt = summary["target"]
     L.append(f"`llm-redteam {summary['version']}` · scenario **{summary['scenario']}** · "
-             f"target `{tgt}` · judge `{summary['judge_model'] or 'detector-only'}` · "
+             f"target `{tgt}` · judge `{summary['judge_model'] or 'detector-only'}` "
+             f"(prompt v{summary.get('judge_version', '?')}) · "
              f"{summary['n_attacks']} attacks, {summary['n_benign']} benign controls\n")  # fmt: skip
     if gate:
         L.append(f"## CI gate: {'✅ PASSED' if gate.passed else '❌ FAILED'}\n")
@@ -203,7 +206,7 @@ def render_markdown(summary: dict, gate: GateResult | None = None) -> str:
     if ja:
         g = ja.get("_gold", {})
         L.append("## Judge validation\n")
-        L.append(f"Judges vs. {g.get('n')} human gold labels on the undefended responses "
+        L.append(f"Judges vs. {g.get('n')} gold labels on the undefended responses "
                  f"(labeller(s): {', '.join(g.get('labellers', []))}).\n")  # fmt: skip
         L.append("| Judge | Accuracy | Precision | Recall | F1 | Cohen's κ |")
         L.append("|---|---|---|---|---|---|")
