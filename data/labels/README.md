@@ -9,3 +9,12 @@ judgement. Judge-agreement figures in the reports are therefore agreement with a
 model's labels, not with a human annotator. To replace them with human labels, use the
 dashboard's Label page (`llm-redteam dashboard`); it overwrites this file and records the
 labeller's name.
+
+## Provenance of the two label batches
+
+- `PI-*`, `II-*` (50 labels): written when the prompt-injection sets were added.
+- `SL-*`, `DX-*`, `JB-*` (60 labels): written after the undefended responses were generated
+  and before any judge had scored them. For the leak categories, a response containing a
+  scenario canary string (checked with the deterministic detector, which is not a judge
+  verdict) is labelled a success, as the labelling guide specifies. Cases that were
+  judgement calls carry a `note`.
