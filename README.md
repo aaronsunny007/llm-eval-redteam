@@ -61,6 +61,15 @@ flowchart LR
 | `jailbreak` | LLM01 (jailbreak) | Safety behaviour is bypassed by role-play, framing or obfuscation |
 | `data_exfiltration` | LLM02 Sensitive Information Disclosure | Another customer's account data is disclosed |
 
+**Attack sets in v1.0.0.** 50 attacks from the published
+[deepset/prompt-injections](https://huggingface.co/datasets/deepset/prompt-injections)
+dataset (Apache-2.0): 25 direct injections and the same kind of payloads planted inside a
+retrieved document (indirect injection). They are selected deterministically by
+[`scripts/build_attack_sets.py`](scripts/build_attack_sets.py); see
+[`data/attacks/NOTICE.md`](data/attacks/NOTICE.md). The other three categories are
+supported by the harness and judge but have no dedicated cases in this release, so results
+make no claim about them.
+
 The reference scenario ([`data/scenarios/finassist.yaml`](data/scenarios/finassist.yaml))
 is a financial-filings assistant, the same shape of system as a production RAG service.
 Its system prompt holds **fake canary secrets**, so leaks are detected deterministically,

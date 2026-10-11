@@ -8,7 +8,8 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 - Installable package `llm-redteam` with a CLI: `run`, `ci`, `report`, `validate`, `dashboard`.
-- Attack sets as versioned, schema-validated JSONL data files (`data/attacks/`), plus a
+- 50 attacks (25 direct, 25 indirect) built from deepset/prompt-injections (Apache-2.0) by a
+  deterministic script, as versioned, schema-validated JSONL data files (`data/attacks/`), plus a
   benign control set (`data/benign/`) for measuring over-refusal.
 - Reference scenario (`data/scenarios/finassist.yaml`): a financial-filings assistant
   with fake canary secrets for deterministic leak detection.
