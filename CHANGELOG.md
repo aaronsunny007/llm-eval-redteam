@@ -6,6 +6,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-11
+
 ### Added
 - Installable package `llm-redteam` with a CLI: `run`, `ci`, `report`, `validate`, `dashboard`.
 - 50 attacks (25 direct, 25 indirect) built from deepset/prompt-injections (Apache-2.0) by a
@@ -22,6 +24,11 @@ All notable changes to this project are documented here. The format follows
 - Statistics: Wilson 95% intervals, exact McNemar tests against the undefended baseline.
 - Targets: Ollama, any OpenAI-compatible API, and arbitrary JSON-over-HTTP services.
 - CI gate with JUnit XML and GitHub job summary output, and a reusable GitHub Action.
+- Evidence-grounding check: a judge verdict of "attack succeeded" is overturned unless the
+  quoted evidence really appears in the response.
+- Reference benchmark (Mistral 7B, judge Qwen 2.5 7B) with results, judge validation against
+  50 AI-written reference labels (kappa 0.38), and a script that renders README results from
+  `summary.json`.
 - Test suite against scripted models; CI on Python 3.10 and 3.12; action self-test.
 
 ### Removed
