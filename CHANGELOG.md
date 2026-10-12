@@ -6,6 +6,10 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+- `examples/ledger/`: a drop-in red-team workflow, config and scenario for the Ledger API
+  (85 attacks, Gemini judge, weekly gate). Tested against fake servers only.
+
 ## [1.1.1] - 2026-10-12
 
 ### Fixed
@@ -15,10 +19,6 @@ All notable changes to this project are documented here. The format follows
   kappa 0.63 -> 0.67, recall 73% -> 78%, precision unchanged.
 - Model and HTTP-target calls retry on rate limits (429), server errors and dropped
   connections with backoff, so hosted free-tier judges slow a run instead of failing it.
-
-### Added
-- A Ledger red-team workflow (`redteam/` and `.github/workflows/redteam.yml` in the Ledger
-  repository, on branch `redteam-ci`) using this action with a Gemini judge.
 
 ## [1.1.0] - 2026-10-12
 

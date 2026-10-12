@@ -1,0 +1,88 @@
+name: redteam
+
+# Red-teams Ledger's public API with 85 published attacks (prompt injection, system-prompt
+# leak, data exfiltration, jailbreak) scored by an LLM judge, and fails if the attack success
+# rate crosses the gate in redteam/ledger.yaml. Weekly and on demand: it makes about 85 answer
+# calls and 85 judge calls, which is a lot for a free API tier on every pull request.
+# Needs the GEMINI_API_KEY secret; without it the job is skipped, not failed.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 5 * * 1"
+
+concurrency:
+  group: redteam
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  redteam:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      LLM_PROVIDER: ${{ vars.LLM_PROVIDER || 'gemini' }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT || 'Aaron Gandi aarongandi007@gmail.com' }}
+      # The red team sends all its questions from one address; lift the demo's per-IP limit.
+      RATE_LIMIT_PER_MINUTE: "10000"
+      DAILY_SPEND_CAP_USD: "5"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check prerequisites
+        id: pre
+        run: |
+          if [ -z "$GEMINI_API_KEY" ]; then
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "Red team skipped: add a GEMINI_API_KEY repository secret." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-python@v5
+        if: steps.pre.outputs.run == 'true'
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install Ledger (CPU torch)
+        if: steps.pre.outputs.run == 'true'
+        run: |
+          pip install --index-url https://download.pytorch.org/whl/cpu torch
+          pip install -e ".[models]"
+
+      - name: Cache filings, index and models
+        if: steps.pre.outputs.run == 'true'
+        uses: actions/cache@v4
+        with:
+          path: |
+            data/raw
+            data/processed
+            ~/.cache/huggingface
+          key: redteam-aapl-2024-${{ hashFiles('configs/corpus.yaml', 'ledger/ingest/**/*.py') }}
+
+      - name: Download and index one filing
+        if: steps.pre.outputs.run == 'true'
+        run: |
+          ledger download --tickers AAPL --years 2024
+          ledger ingest | tail -5
+
+      - name: Start the API
+        if: steps.pre.outputs.run == 'true'
+        run: |
+          nohup uvicorn ledger.api.main:app --host 127.0.0.1 --port 8000 > api.log 2>&1 &
+          for i in $(seq 1 60); do curl -sf http://127.0.0.1:8000/health && break; sleep 2; done
+          curl -sf http://127.0.0.1:8000/health
+
+      - name: Red team (gate)
+        if: steps.pre.outputs.run == 'true'
+        uses: aaronsunny007/llm-eval-redteam@v1.1.1
+        with:
+          config: redteam/ledger.yaml
+
+      - name: API log on failure
+        if: failure() && steps.pre.outputs.run == 'true'
+        run: tail -n 80 api.log || true
