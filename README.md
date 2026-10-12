@@ -226,8 +226,10 @@ gate:
 The job fails if any threshold is crossed. It writes a Markdown report to the job
 summary, JUnit XML (one test per attack) for test reporters, and uploads all transcripts
 as an artifact. A complete workflow is in
-[`examples/ledger-redteam.yml`](examples/ledger-redteam.yml). For OpenAI-compatible
-judges, use `{provider: openai, model: ..., base_url: ..., api_key_env: ...}`.
+[`examples/ledger-redteam.yml`](examples/ledger-redteam.yml). A fuller drop-in for a
+real RAG API (85 attacks, hosted Gemini judge, weekly gate) is in
+[`examples/ledger/`](examples/ledger/); it was tested against fake servers only. For
+OpenAI-compatible judges, use `{provider: openai, model: ..., base_url: ..., api_key_env: ...}`.
 
 ## Project layout
 
