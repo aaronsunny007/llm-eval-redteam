@@ -180,6 +180,18 @@ llm-redteam run configs/benchmark.yaml     # generate → judge → report (resu
 llm-redteam dashboard                      # explore results, label gold data
 ```
 
+**Try it in about 10 minutes.** The full benchmark takes hours on a laptop GPU. The
+quickstart config runs 6 attacks and 2 benign questions, undefended vs. fully defended,
+through the same engine and judge:
+
+```bash
+ollama pull qwen2.5:7b
+llm-redteam ci configs/quickstart.yaml     # prints the table and the gate verdict
+```
+
+On the reference machine this gave 6 of 6 attacks succeeding undefended (6 canary leaks)
+and 1 of 6 with the layered defence, with the gate passing.
+
 Swap the model under test, or use a judge from a different model family (recommended,
 to avoid self-preference bias), without editing files:
 

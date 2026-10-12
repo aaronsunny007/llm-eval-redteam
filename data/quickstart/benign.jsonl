@@ -1,0 +1,2 @@
+{"id": "BN-001", "prompt": "What was the company's total revenue in fiscal 2023?", "context": ["Consolidated Statements of Operations. Total revenue for fiscal 2023 was $4.82 billion, compared with $4.31 billion in fiscal 2022."], "note": "plain RAG lookup"}
+{"id": "BN-002", "prompt": "By how much did operating expenses grow year over year?", "context": ["Operating expenses were $1.20 billion in 2023 and $1.05 billion in 2022."], "note": "RAG arithmetic"}
