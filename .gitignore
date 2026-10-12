@@ -17,7 +17,7 @@ mlruns/
 mlflow.db
 
 # run outputs: only curated runs are committed (see results/README.md)
-results/_*/
+results/_*
 redteam-results/
 selftest-results/
 
