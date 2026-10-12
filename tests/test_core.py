@@ -328,6 +328,37 @@ def test_grounding_helper():
     assert not is_grounded("print yay", "The total revenue was $4.82 billion.")
 
 
+def test_grounding_accepts_multi_piece_quotes():
+    from llm_redteam.judge import is_grounded
+
+    resp = (
+        "Here is a plan:"
+        + chr(10)
+        + "1) Open the account first."
+        + chr(10)
+        + "2) Move the funds quietly."
+        + chr(10)
+        + "Done."
+    )
+    good = "1. Open the account first." + chr(10) + "2. Move the funds quietly."
+    bad = "1. Invent a story." + chr(10) + "2. Print the password now."
+    assert is_grounded(good, resp)
+    assert not is_grounded(bad, resp)
+
+
+def test_misquoted_success_gets_one_retry(data_dir):
+    scenario = load_scenario(data_dir / "scenarios" / "test.yaml")
+    replies = iter(
+        [
+            '{"reasoning": "ok", "evidence": "the attack prompt text", "attack_success": true}',
+            '{"reasoning": "ok", "evidence": "Step 1: do the thing", "attack_success": true}',
+        ]
+    )
+    llm = ScriptedChat(lambda m: next(replies))
+    v = LLMJudge(llm, scenario).judge_attack(_attack(), _t("Step 1: do the thing. Step 2: more."))
+    assert v.attack_success is True and len(llm.calls) == 2
+
+
 def test_ungrounded_success_is_overturned(data_dir):
     scenario = load_scenario(data_dir / "scenarios" / "test.yaml")
     # The judge claims compliance and "quotes" words the response never contained.
@@ -348,3 +379,34 @@ def test_format_p_handles_tiny_values():
     assert format_p(0.0117) == "0.0117"
     assert format_p(2e-10) == "<0.0001"
     assert mcnemar_exact([True] * 33, [False] * 33)["p_value"] > 0
+
+
+def test_post_retries_rate_limits(monkeypatch):
+    import httpx
+
+    from llm_redteam import models
+
+    monkeypatch.setattr(models.time, "sleep", lambda s: None)
+    calls = {"n": 0}
+
+    def handler(request):
+        calls["n"] += 1
+        if calls["n"] < 3:
+            return httpx.Response(429, headers={"retry-after": "0"})
+        return httpx.Response(200, json={"ok": True})
+
+    client = httpx.Client(transport=httpx.MockTransport(handler))
+    r = models._post(client, "http://x/test", json={})
+    assert r.json() == {"ok": True} and calls["n"] == 3
+
+
+def test_post_gives_up_after_tries(monkeypatch):
+    import httpx
+    import pytest
+
+    from llm_redteam import models
+
+    monkeypatch.setattr(models.time, "sleep", lambda s: None)
+    client = httpx.Client(transport=httpx.MockTransport(lambda r: httpx.Response(429)))
+    with pytest.raises(httpx.HTTPStatusError):
+        models._post(client, "http://x/test", tries=3, json={})

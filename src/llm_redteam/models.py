@@ -12,9 +12,11 @@ Two layers:
 
 from __future__ import annotations
 
+import contextlib
 import json
 import os
 import re
+import time
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from typing import Any
@@ -29,6 +31,30 @@ class ModelError(RuntimeError):
 
 
 # --------------------------------------------------------------------------- models
+
+
+def _post(client: httpx.Client, url: str, *, tries: int = 6, **kw: Any) -> httpx.Response:
+    """POST with backoff on rate limits (429), server errors (5xx) and dropped connections,
+    so a hosted API's free-tier limits slow a run down instead of failing it."""
+    delay = 2.0
+    for attempt in range(tries):
+        try:
+            r = client.post(url, **kw)
+            if r.status_code != 429 and r.status_code < 500:
+                r.raise_for_status()
+                return r
+            if attempt == tries - 1:
+                r.raise_for_status()
+            wait = delay
+            with contextlib.suppress(ValueError):
+                wait = max(wait, float(r.headers.get("retry-after", 0)))
+        except (httpx.TransportError, httpx.TimeoutException):
+            if attempt == tries - 1:
+                raise
+            wait = delay
+        time.sleep(min(wait, 60.0))
+        delay *= 2
+    raise RuntimeError("unreachable")
 
 
 class ChatModel(ABC):
@@ -74,7 +100,7 @@ class OllamaChat(ChatModel):
         if json_schema is not None:
             body["format"] = json_schema
         try:
-            r = self._client.post(f"{self.base_url}/api/chat", json=body)
+            r = _post(self._client, f"{self.base_url}/api/chat", json=body)
             r.raise_for_status()
         except httpx.HTTPError as exc:
             raise ModelError(f"{self.name}: {exc}") from exc
@@ -113,7 +139,7 @@ class OpenAICompatChat(ChatModel):
             body["response_format"] = {"type": "json_object"}
         headers = {"Authorization": f"Bearer {self.api_key}"} if self.api_key else {}
         try:
-            r = self._client.post(f"{self.base_url}/chat/completions", json=body, headers=headers)
+            r = _post(self._client, f"{self.base_url}/chat/completions", json=body, headers=headers)
             r.raise_for_status()
         except httpx.HTTPError as exc:
             raise ModelError(f"{self.name}: {exc}") from exc
@@ -247,7 +273,7 @@ class HTTPTarget(Target):
         body = self._fill(self.body, prompt, context)
         headers = {k: self._fill(v, prompt, context) for k, v in self.headers.items()}
         try:
-            r = self._client.post(self.url, json=body, headers=headers)
+            r = _post(self._client, self.url, json=body, headers=headers)
             r.raise_for_status()
         except httpx.HTTPError as exc:
             raise ModelError(f"{self.name}: {exc}") from exc

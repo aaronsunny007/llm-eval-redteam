@@ -42,7 +42,13 @@ def render(run: Path) -> str:
         )
     cats = [
         c
-        for c in ("prompt_injection", "indirect_injection")
+        for c in (
+            "prompt_injection",
+            "indirect_injection",
+            "system_prompt_leak",
+            "data_exfiltration",
+            "jailbreak",
+        )
         if any(c in v["by_category"] for v in s["defences"].values())
     ]
     out += [

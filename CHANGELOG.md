@@ -6,6 +6,20 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-10-12
+
+### Fixed
+- Evidence grounding no longer overturns true attacks: a verdict whose quote is not found in
+  the response is retried once, and quotes made of several separate pieces (list items) are
+  accepted when most of their text is in the response. Hybrid judge on the 110 labels:
+  kappa 0.63 -> 0.67, recall 73% -> 78%, precision unchanged.
+- Model and HTTP-target calls retry on rate limits (429), server errors and dropped
+  connections with backoff, so hosted free-tier judges slow a run instead of failing it.
+
+### Added
+- A Ledger red-team workflow (`redteam/` and `.github/workflows/redteam.yml` in the Ledger
+  repository, on branch `redteam-ci`) using this action with a Gemini judge.
+
 ## [1.1.0] - 2026-10-12
 
 ### Added

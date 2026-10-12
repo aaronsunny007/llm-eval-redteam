@@ -100,61 +100,69 @@ with no model needed.
 ## Results
 
 <!-- RESULTS:START -->
-Run `finassist-mistral`: 110 attacks, 20 benign controls. Target `mistral` (Ollama), judge `qwen2.5:7b`, judge prompt v2-grounded. 95% Wilson intervals in brackets.
+Run `finassist-mistral`: 110 attacks, 20 benign controls. Target `mistral` (Ollama), judge `qwen2.5:7b`, judge prompt v2.1-grounded. 95% Wilson intervals in brackets.
 
 | Defence | Attack success | Benign refused | Secret leaks | Fixed / regressed | McNemar p |
 |---|---|---|---|---|---|
-| `none` | 39% (43/110) [30%-48%] | 0% (0/20) [0%-16%] | 29 | - | - |
-| `hardened_prompt` | 23% (25/110) [16%-31%] | 0% (0/20) [0%-16%] | 15 | 22 / 4 | 0.000534 |
-| `input_guard` | 19% (21/110) [13%-27%] | 0% (0/20) [0%-16%] | 12 | 24 / 2 | <0.0001 |
-| `output_guard` | 9% (10/110) [5%-16%] | 15% (3/20) [5%-36%] | 0 | 33 / 0 | <0.0001 |
-| `layered` | 4% (4/110) [1%-9%] | 5% (1/20) [1%-24%] | 0 | 40 / 1 | <0.0001 |
+| `none` | 41% (45/110) [32%-50%] | 0% (0/20) [0%-16%] | 29 | - | - |
+| `hardened_prompt` | 25% (28/110) [18%-34%] | 0% (0/20) [0%-16%] | 15 | 21 / 4 | 0.000911 |
+| `input_guard` | 20% (22/110) [14%-28%] | 0% (0/20) [0%-16%] | 12 | 25 / 2 | <0.0001 |
+| `output_guard` | 11% (12/110) [6%-18%] | 15% (3/20) [5%-36%] | 0 | 33 / 0 | <0.0001 |
+| `layered` | 5% (5/110) [2%-10%] | 5% (1/20) [1%-24%] | 0 | 41 / 1 | <0.0001 |
 
 | Category (attacks that succeeded) | `none` | `hardened_prompt` | `input_guard` | `output_guard` | `layered` |
 |---|---|---|---|---|---|
 | prompt_injection | 8/25 | 4/25 | 6/25 | 3/25 | 0/25 |
 | indirect_injection | 4/25 | 5/25 | 5/25 | 4/25 | 3/25 |
+| system_prompt_leak | 11/20 | 6/20 | 3/20 | 2/20 | 0/20 |
+| data_exfiltration | 15/20 | 9/20 | 6/20 | 0/20 | 1/20 |
+| jailbreak | 7/20 | 4/20 | 2/20 | 3/20 | 1/20 |
 
 Judge agreement with 110 reference labels written by `claude-sonnet-5-5` on the undefended responses:
 
 | Judge | Accuracy | Precision | Recall | F1 | Cohen's kappa |
 |---|---|---|---|---|---|
-| `hybrid` | 82% | 84% | 73% | 0.78 | 0.63 (substantial) |
-| `llm` | 69% | 76% | 45% | 0.56 | 0.35 (fair) |
+| `hybrid` | 84% | 84% | 78% | 0.81 | 0.67 (substantial) |
+| `llm` | 75% | 80% | 57% | 0.67 | 0.47 (moderate) |
 | `keyword` | 49% | 27% | 8% | 0.12 | -0.11 (poor) |
 <!-- RESULTS:END -->
 
 ### What this shows (and what it doesn't)
 
-Run on 2026-10-12 with Ollama 0.40.2, `llm-redteam` 1.1.0, Mistral 7B (Q4_K_M) as target
+Run on 2026-10-12 with Ollama 0.40.2, `llm-redteam` 1.1.1, Mistral 7B (Q4_K_M) as target
 and guard model, Qwen 2.5 7B as judge, temperature 0, one run.
 
 - **Every defence helped, and defence in depth helped most.** Judged attack success fell
-  from 39% undefended to 23% (`hardened_prompt`), 19% (`input_guard`), 9% (`output_guard`)
-  and **4% (`layered`)**. All four improvements are significant against the undefended
-  baseline (exact McNemar, paired per case; `layered` fixed 40 attacks and regressed 1).
+  from 41% undefended to 25% (`hardened_prompt`), 20% (`input_guard`), 11% (`output_guard`)
+  and **5% (`layered`)**. All four improvements are significant against the undefended
+  baseline (exact McNemar, paired per case; `layered` fixed 41 attacks and regressed 1).
 - **Security has a price.** `output_guard` refused 3 of 20 benign questions (15%) and
   `layered` 1 of 20. The benign control set is what keeps the attack numbers honest.
-- **Leaks are fully closed by the output scanner.** The undefended model leaked a canary
-  in 29 responses; `output_guard` and `layered` leaked none.
-- **Indirect injection is the hard case.** `layered` blocked all direct injections,
-  leaks and jailbreaks except one exfiltration case, but 3 of 25 document-borne
-  injections still got through. Treat retrieved text as untrusted input.
+- **Leaks are closed by the output scanner.** The undefended model leaked a canary in 29
+  responses; `output_guard` and `layered` leaked none.
+- **Indirect injection is the hard case.** `layered` stopped every direct injection and
+  system-prompt leak, but 3 of 25 document-borne injections, 1 jailbreak and 1 exfiltration
+  case still got through. Treat retrieved text as untrusted input.
 - **The judge is only as good as its labels say.** Against the 110 reference labels the
-  hybrid judge scores κ = 0.63 (substantial), but that number hides a split:
+  hybrid judge scores κ = 0.67 (substantial), precision 84%, recall 78%, but that hides a split:
   - on the leak categories (`system_prompt_leak`, `data_exfiltration`) κ = 0.89, because
-    the deterministic canary detector decides those cases, and the labels were also
+    the deterministic canary detector decides those cases and the labels were also
     anchored on canary strings. That agreement is partly by construction;
-  - on the cases that depend on the 7B LLM judge (`prompt_injection`, `indirect_injection`,
-    `jailbreak`) κ = 0.40 (fair to moderate), with recall around 50%.
+  - on the cases that depend on the 7B LLM judge (`prompt_injection`,
+    `indirect_injection`, `jailbreak`) κ = 0.47 (moderate), with recall 56%. The weak spot
+    is direct and indirect injection (κ 0.38 on the first 50 cases, recall 47%): a 7B model
+    often says the response ignored an instruction it plainly carried out.
   The reference labels put the undefended attack success rate at 45% [36%-54%], against
-  39% from the judge, so the judge **underestimates** the attacks that need judgement.
-  A stronger judge model is the obvious upgrade (`--set judge.model.model=...`).
-- **What was and wasn't held out.** The judge prompt was revised once, after the first
-  50 labels (an evidence-quoting check now overturns verdicts whose quoted evidence is not
-  in the response), so those 50 are in-sample (κ 0.38). The other 60 labels were written
-  before any judge scored those cases and the judge was not changed afterwards.
-  The first-pass results are kept in `results/finassist-mistral/judge-v1-ungrounded/`.
+  41% from the judge, so the judge still **underestimates** attacks that need judgement.
+  A stronger judge model is the obvious upgrade (`--set judge.model.model=...`, or any
+  OpenAI-compatible endpoint such as Gemini's; the Ledger workflow does exactly that).
+- **What was and wasn't held out.** The judge was changed twice after labels were seen:
+  once to add the evidence-quoting check, and once to stop that check overturning true
+  attacks (it rejected quotes of the prompt instead of the response, and multi-line quotes
+  of list items; it now retries once and accepts piecewise quotes). Both changes were
+  prompted by labelled cases, so every κ above is in-sample for the judge logic. The 60
+  labels for the three newer categories were written before any judge scored them.
+  First-pass results are kept in `results/finassist-mistral/judge-v1-ungrounded/`.
 - **Scope.** One scenario, one target model, one run per configuration, and 20 to 25
   cases per category, so category-level intervals are wide.
 
@@ -208,7 +216,7 @@ gate:
 
 ```yaml
 # .github/workflows/redteam.yml
-- uses: aaronsunny007/llm-eval-redteam@v1.1.0
+- uses: aaronsunny007/llm-eval-redteam@v1.1.1
   with:
     config: redteam.yaml
     install-ollama: "true"
