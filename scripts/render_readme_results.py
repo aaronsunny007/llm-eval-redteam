@@ -12,6 +12,8 @@ import json
 import sys
 from pathlib import Path
 
+from llm_redteam.metrics import format_p
+
 START, END = "<!-- RESULTS:START -->", "<!-- RESULTS:END -->"
 
 
@@ -33,7 +35,7 @@ def render(run: Path) -> str:
     for d, v in s["defences"].items():
         c = s["vs_baseline"].get(d)
         fr = f"{c['fixed']} / {c['regressed']}" if c else "-"
-        p = f"{c['p_value']:.3g}" if c else "-"
+        p = format_p(c["p_value"]) if c else "-"
         out.append(
             f"| `{d}` | {pct(v['attack_success'])} | {pct(v['benign_refusal'])} "
             f"| {v['secret_leaks']} | {fr} | {p} |"

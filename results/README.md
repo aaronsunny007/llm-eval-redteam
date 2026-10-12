@@ -12,3 +12,4 @@ Each committed run directory contains:
 | `guard_log.jsonl` | Why each guard fired |
 
 Directories starting with `_` are scratch runs and are git-ignored.
+Note: responses to the jailbreak cases may contain model-written harmful content; kept so the judge can be audited.

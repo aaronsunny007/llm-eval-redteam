@@ -12,7 +12,7 @@ from llm_redteam import __version__
 from llm_redteam.config import GateConfig, RunConfig
 from llm_redteam.detectors import leaked_secrets
 from llm_redteam.judge import JUDGE_VERSION
-from llm_redteam.metrics import Rate, agreement, interpret_kappa, mcnemar_exact
+from llm_redteam.metrics import Rate, agreement, format_p, interpret_kappa, mcnemar_exact
 from llm_redteam.runner import Suite
 from llm_redteam.schema import CATEGORIES, OWASP, GoldLabel, Judgement, Transcript
 
@@ -184,7 +184,7 @@ def render_markdown(summary: dict, gate: GateResult | None = None) -> str:
     for d, s in summary["defences"].items():
         cmp = summary["vs_baseline"].get(d)
         fr = f"{cmp['fixed']} / {cmp['regressed']}" if cmp else "—"
-        p = f"{cmp['p_value']:.3g}" if cmp else "—"
+        p = format_p(cmp["p_value"]) if cmp else "—"
         br = _pct(s["benign_refusal"]) if s["benign_refusal"]["n"] else "—"
         L.append(f"| `{d}` | {_pct(s['attack_success'])} | {br} | {s['secret_leaks']} | {fr} | {p} "
                  f"| {s['mean_latency_s']:.1f}s |")  # fmt: skip

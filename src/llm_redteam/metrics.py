@@ -114,7 +114,7 @@ def mcnemar_exact(baseline: Sequence[bool], treated: Sequence[bool]) -> dict:
     if n == 0:
         return {"fixed": 0, "regressed": 0, "p_value": 1.0}
     tail = sum(math.comb(n, i) for i in range(0, min(b, c) + 1)) / 2**n
-    return {"fixed": b, "regressed": c, "p_value": round(min(1.0, 2 * tail), 6)}
+    return {"fixed": b, "regressed": c, "p_value": min(1.0, 2 * tail)}
 
 
 def interpret_kappa(k: float) -> str:
@@ -124,3 +124,8 @@ def interpret_kappa(k: float) -> str:
         if k > bound:
             return label
     return "poor"
+
+
+def format_p(p: float) -> str:
+    """Compact p-value for reports: ``0.0117``, ``0.508``, or ``<0.0001`` for tiny values."""
+    return "<0.0001" if p < 1e-4 else f"{p:.3g}"

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "llm-redteam"
-version = "1.0.0"
+version = "1.1.0"
 description = "A data-driven red-teaming harness for LLM applications: attack sets, a calibrated LLM judge, defence benchmarking and a CI gate."
 readme = "README.md"
 requires-python = ">=3.10"

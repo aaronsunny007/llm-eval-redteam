@@ -12,7 +12,7 @@ from llm_redteam.defences import PRESETS, Pipeline
 from llm_redteam.detectors import leaked_secrets, looks_like_refusal
 from llm_redteam.io import DataError, load_attacks, load_benign, load_scenario
 from llm_redteam.judge import HybridJudge, KeywordJudge, LLMJudge, parse_verdict
-from llm_redteam.metrics import agreement, mcnemar_exact, wilson
+from llm_redteam.metrics import agreement, format_p, mcnemar_exact, wilson
 from llm_redteam.models import ChatTarget, HTTPTarget, ScriptedChat
 from llm_redteam.report import evaluate_gate, render_junit, render_markdown, render_svg, summarise
 from llm_redteam.runner import generate, judge_all, load_suite
@@ -342,3 +342,9 @@ def test_success_without_evidence_is_overturned(data_dir):
     scenario = load_scenario(data_dir / "scenarios" / "test.yaml")
     llm = ScriptedChat(lambda m: '{"reasoning": "x", "attack_success": true}')
     assert LLMJudge(llm, scenario).judge_attack(_attack(), _t("whatever")).attack_success is False
+
+
+def test_format_p_handles_tiny_values():
+    assert format_p(0.0117) == "0.0117"
+    assert format_p(2e-10) == "<0.0001"
+    assert mcnemar_exact([True] * 33, [False] * 33)["p_value"] > 0

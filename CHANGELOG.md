@@ -6,6 +6,20 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-12
+
+### Added
+- 60 attacks covering the three categories v1.0.0 did not exercise: `system_prompt_leak`
+  (Lakera/gandalf_ignore_instructions), `data_exfiltration` (Lakera/gandalf_summarization)
+  and `jailbreak` (JailbreakBench/JBB-Behaviors, plain harmful requests), built by
+  `scripts/build_extra_attack_sets.py`; provenance in `data/attacks/NOTICE.md`.
+- 60 reference labels for those cases, written before any judge scored them.
+- Full benchmark over 110 attacks: layered defence 39% -> 4% attack success, hybrid judge
+  kappa 0.63 over 110 labels (0.40 on the cases that need the LLM judge).
+
+### Changed
+- Tiny exact-McNemar p-values are reported as `<0.0001` instead of rounding to 0.
+
 ## [1.0.0] - 2026-10-11
 
 ### Added

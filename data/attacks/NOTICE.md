@@ -16,7 +16,7 @@ This repository did not write the payloads. `scripts/build_attack_sets.py` only:
 
 Regenerate with `python scripts/build_attack_sets.py`.
 
-## Secret-extraction and jailbreak sets (added in v1.0.0)
+## Secret-extraction and jailbreak sets (added in v1.1.0)
 
 `scripts/build_extra_attack_sets.py` builds three further sets the same way: payload text is
 verbatim from the source, and the script only filters, orders by seeded SHA-256 and formats it.

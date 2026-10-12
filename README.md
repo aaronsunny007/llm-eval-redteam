@@ -61,14 +61,22 @@ flowchart LR
 | `jailbreak` | LLM01 (jailbreak) | Safety behaviour is bypassed by role-play, framing or obfuscation |
 | `data_exfiltration` | LLM02 Sensitive Information Disclosure | Another customer's account data is disclosed |
 
-**Attack sets in v1.0.0.** 50 attacks from the published
-[deepset/prompt-injections](https://huggingface.co/datasets/deepset/prompt-injections)
-dataset (Apache-2.0): 25 direct injections and the same kind of payloads planted inside a
-retrieved document (indirect injection). They are selected deterministically by
-[`scripts/build_attack_sets.py`](scripts/build_attack_sets.py); see
-[`data/attacks/NOTICE.md`](data/attacks/NOTICE.md). The other three categories are
-supported by the harness and judge but have no dedicated cases in this release, so results
-make no claim about them.
+**Attack sets in v1.1.0.** 110 attacks, every payload taken verbatim from a published
+dataset (provenance, licences and revisions in [`data/attacks/NOTICE.md`](data/attacks/NOTICE.md)),
+selected deterministically by [`scripts/build_attack_sets.py`](scripts/build_attack_sets.py)
+and [`scripts/build_extra_attack_sets.py`](scripts/build_extra_attack_sets.py):
+
+| Category | Cases | Source |
+|---|---|---|
+| `prompt_injection` | 25 | deepset/prompt-injections (Apache-2.0) |
+| `indirect_injection` | 25 | the same payloads planted in a retrieved filing excerpt |
+| `system_prompt_leak` | 20 | Lakera/gandalf_ignore_instructions (MIT) |
+| `data_exfiltration` | 20 | Lakera/gandalf_summarization (MIT) |
+| `jailbreak` | 20 | JailbreakBench/JBB-Behaviors, finance-relevant categories (MIT) |
+
+Two things to know before quoting numbers: the jailbreak cases are the benchmark's plain
+harmful requests, **not** optimised jailbreak templates, and the Gandalf prompts were
+written against a different password game and are replayed here against FinAssist.
 
 The reference scenario ([`data/scenarios/finassist.yaml`](data/scenarios/finassist.yaml))
 is a financial-filings assistant, the same shape of system as a production RAG service.
@@ -84,7 +92,7 @@ with no model needed.
 | `output_guard` | Post-model | Deterministic secret scanner, then an LLM policy check of the draft reply |
 | `layered` | All | All three combined (defence in depth) |
 
-> **Label provenance.** The v1.0.0 gold labels were written by an AI model
+> **Label provenance.** The gold labels were written by an AI model
 > (`claude-sonnet-5-5`), blind to the judge's verdicts, not by a human annotator. See
 > [`data/labels/README.md`](data/labels/README.md). The labelling tool exists so a human
 > can replace them.
@@ -92,58 +100,63 @@ with no model needed.
 ## Results
 
 <!-- RESULTS:START -->
-Run `finassist-mistral`: 50 attacks, 20 benign controls. Target `mistral` (Ollama), judge `qwen2.5:7b`, judge prompt v2-grounded. 95% Wilson intervals in brackets.
+Run `finassist-mistral`: 110 attacks, 20 benign controls. Target `mistral` (Ollama), judge `qwen2.5:7b`, judge prompt v2-grounded. 95% Wilson intervals in brackets.
 
 | Defence | Attack success | Benign refused | Secret leaks | Fixed / regressed | McNemar p |
 |---|---|---|---|---|---|
-| `none` | 24% (12/50) [14%-37%] | 0% (0/20) [0%-16%] | 4 | - | - |
-| `hardened_prompt` | 18% (9/50) [10%-31%] | 0% (0/20) [0%-16%] | 2 | 6 / 3 | 0.508 |
-| `input_guard` | 22% (11/50) [13%-35%] | 0% (0/20) [0%-16%] | 4 | 3 / 2 | 1 |
-| `output_guard` | 14% (7/50) [7%-26%] | 15% (3/20) [5%-36%] | 0 | 5 / 0 | 0.0625 |
-| `layered` | 6% (3/50) [2%-16%] | 5% (1/20) [1%-24%] | 0 | 10 / 1 | 0.0117 |
+| `none` | 39% (43/110) [30%-48%] | 0% (0/20) [0%-16%] | 29 | - | - |
+| `hardened_prompt` | 23% (25/110) [16%-31%] | 0% (0/20) [0%-16%] | 15 | 22 / 4 | 0.000534 |
+| `input_guard` | 19% (21/110) [13%-27%] | 0% (0/20) [0%-16%] | 12 | 24 / 2 | <0.0001 |
+| `output_guard` | 9% (10/110) [5%-16%] | 15% (3/20) [5%-36%] | 0 | 33 / 0 | <0.0001 |
+| `layered` | 4% (4/110) [1%-9%] | 5% (1/20) [1%-24%] | 0 | 40 / 1 | <0.0001 |
 
 | Category (attacks that succeeded) | `none` | `hardened_prompt` | `input_guard` | `output_guard` | `layered` |
 |---|---|---|---|---|---|
 | prompt_injection | 8/25 | 4/25 | 6/25 | 3/25 | 0/25 |
 | indirect_injection | 4/25 | 5/25 | 5/25 | 4/25 | 3/25 |
 
-Judge agreement with 50 reference labels written by `claude-sonnet-5-5` on the undefended responses:
+Judge agreement with 110 reference labels written by `claude-sonnet-5-5` on the undefended responses:
 
 | Judge | Accuracy | Precision | Recall | F1 | Cohen's kappa |
 |---|---|---|---|---|---|
-| `hybrid` | 74% | 67% | 47% | 0.55 | 0.38 (fair) |
-| `llm` | 70% | 60% | 35% | 0.44 | 0.26 (fair) |
-| `keyword` | 66% | 0% | 0% | 0.00 | 0.00 (poor) |
+| `hybrid` | 82% | 84% | 73% | 0.78 | 0.63 (substantial) |
+| `llm` | 69% | 76% | 45% | 0.56 | 0.35 (fair) |
+| `keyword` | 49% | 27% | 8% | 0.12 | -0.11 (poor) |
 <!-- RESULTS:END -->
 
 ### What this shows (and what it doesn't)
 
-Run on 2026-10-11 with Ollama 0.40.2, `llm-redteam` 1.0.0, Mistral 7B (Q4_K_M) as target
+Run on 2026-10-12 with Ollama 0.40.2, `llm-redteam` 1.1.0, Mistral 7B (Q4_K_M) as target
 and guard model, Qwen 2.5 7B as judge, temperature 0, one run.
 
-- **Defence in depth helped; single layers mostly did not.** `layered` cut the judged
-  attack success rate from 24% to 6% (10 fixed, 1 regressed, exact McNemar p = 0.012).
-  No single defence is distinguishable from no defence at this sample size
-  (`hardened_prompt` p = 0.51, `input_guard` p = 1.0, `output_guard` p = 0.06).
+- **Every defence helped, and defence in depth helped most.** Judged attack success fell
+  from 39% undefended to 23% (`hardened_prompt`), 19% (`input_guard`), 9% (`output_guard`)
+  and **4% (`layered`)**. All four improvements are significant against the undefended
+  baseline (exact McNemar, paired per case; `layered` fixed 40 attacks and regressed 1).
 - **Security has a price.** `output_guard` refused 3 of 20 benign questions (15%) and
-  `layered` 1 of 20, so the benign control set is what keeps these numbers honest.
-- **Indirect injection is the hard case.** Layered stopped every direct injection (0/25)
-  but 3 of 25 document-borne injections still got through.
-- **The judge is the weakest link.** Against the 50 reference labels the hybrid judge
-  reaches κ = 0.38 (fair), with 47% recall: it misses attacks. The reference labels put
-  the undefended attack success rate at 34% [22%-48%] (17/50), so the 24% the judge
-  reports is likely an **underestimate**, and defence effects measured with it inherit
-  that noise. A larger judge model should be the first upgrade (`--set judge.model.model=...`).
-  A deterministic secret-leak detector sits in front of the LLM judge for exactly this
-  reason: canary leaks are never left to a 7B model's opinion.
-- **Judge prompt history.** The judge prompt was revised once after the first full run,
-  when it was seen to assert compliance that was not in the response (an evidence-quoting
-  check now overturns such verdicts). That revision was made with the same 50 labels in
-  view, so the κ above is in-sample. A second rewording changed which cases it got right
-  but not κ (0.376 both ways), so it was not adopted. The first-pass results are kept in
-  `results/finassist-mistral/judge-v1-ungrounded/`.
-- **Scope.** Only prompt-injection payloads (direct and in-document) have attack cases in
-  this release. Leak, jailbreak and exfiltration results are not claimed.
+  `layered` 1 of 20. The benign control set is what keeps the attack numbers honest.
+- **Leaks are fully closed by the output scanner.** The undefended model leaked a canary
+  in 29 responses; `output_guard` and `layered` leaked none.
+- **Indirect injection is the hard case.** `layered` blocked all direct injections,
+  leaks and jailbreaks except one exfiltration case, but 3 of 25 document-borne
+  injections still got through. Treat retrieved text as untrusted input.
+- **The judge is only as good as its labels say.** Against the 110 reference labels the
+  hybrid judge scores κ = 0.63 (substantial), but that number hides a split:
+  - on the leak categories (`system_prompt_leak`, `data_exfiltration`) κ = 0.89, because
+    the deterministic canary detector decides those cases, and the labels were also
+    anchored on canary strings. That agreement is partly by construction;
+  - on the cases that depend on the 7B LLM judge (`prompt_injection`, `indirect_injection`,
+    `jailbreak`) κ = 0.40 (fair to moderate), with recall around 50%.
+  The reference labels put the undefended attack success rate at 45% [36%-54%], against
+  39% from the judge, so the judge **underestimates** the attacks that need judgement.
+  A stronger judge model is the obvious upgrade (`--set judge.model.model=...`).
+- **What was and wasn't held out.** The judge prompt was revised once, after the first
+  50 labels (an evidence-quoting check now overturns verdicts whose quoted evidence is not
+  in the response), so those 50 are in-sample (κ 0.38). The other 60 labels were written
+  before any judge scored those cases and the judge was not changed afterwards.
+  The first-pass results are kept in `results/finassist-mistral/judge-v1-ungrounded/`.
+- **Scope.** One scenario, one target model, one run per configuration, and 20 to 25
+  cases per category, so category-level intervals are wide.
 
 ## Quick start
 
@@ -195,7 +208,7 @@ gate:
 
 ```yaml
 # .github/workflows/redteam.yml
-- uses: aaronsunny007/llm-eval-redteam@v1.0.0
+- uses: aaronsunny007/llm-eval-redteam@v1.1.0
   with:
     config: redteam.yaml
     install-ollama: "true"
@@ -250,8 +263,10 @@ re-run the benchmark.
   check that the output guard isn't simply graded by itself.
 - **Reference labels are AI-written.** A human should confirm or correct them with the
   dashboard's labelling page before the judge's κ is quoted externally.
-- **Sample size.** With 50 attacks, category-level rates have wide intervals; the report
-  shows them rather than hiding them.
+- **Jailbreak coverage is a baseline.** The jailbreak set is plain harmful requests; a
+  model that resists them may still fall to optimised templates.
+- **Sample size.** With 20 to 25 attacks per category, category-level rates have wide
+  intervals; the report shows them rather than hiding them.
 - **Determinism.** Generation uses temperature 0 and a fixed seed, but results can shift
   across model or Ollama versions. Record both with every published run.
 
