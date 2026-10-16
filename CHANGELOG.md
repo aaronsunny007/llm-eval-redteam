@@ -7,6 +7,10 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- `paper/`: a technical report (LaTeX source and PDF) on the defence study and the validity of
+  the hybrid judge, with `scripts/paper_stats.py` (bootstrap intervals, pairwise McNemar) and an
+  exploratory replication on Qwen 2.5 7B (`configs/replication-qwen.yaml`,
+  `results/finassist-qwen2.5-7b/`).
 - `examples/ledger/`: a drop-in red-team workflow, config and scenario for the Ledger API
   (85 attacks, Gemini judge, weekly gate). Tested against fake servers only.
 

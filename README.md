@@ -138,8 +138,10 @@ and guard model, Qwen 2.5 7B as judge, temperature 0, one run.
   baseline (exact McNemar, paired per case; `layered` fixed 41 attacks and regressed 1).
 - **Security has a price.** `output_guard` refused 3 of 20 benign questions (15%) and
   `layered` 1 of 20. The benign control set is what keeps the attack numbers honest.
-- **Leaks are closed by the output scanner.** The undefended model leaked a canary in 29
-  responses; `output_guard` and `layered` leaked none.
+- **Canary leaks are closed by the output scanner.** The undefended model leaked a canary in
+  29 responses; `output_guard` and `layered` leaked none. This is true by construction: the
+  scanner and the judge's leak detector use the same matcher. Paraphrased or encoded leaks
+  are not covered by either.
 - **Indirect injection is the hard case.** `layered` stopped every direct injection and
   system-prompt leak, but 3 of 25 document-borne injections, 1 jailbreak and 1 exfiltration
   case still got through. Treat retrieved text as untrusted input.
@@ -165,6 +167,10 @@ and guard model, Qwen 2.5 7B as judge, temperature 0, one run.
   First-pass results are kept in `results/finassist-mistral/judge-v1-ungrounded/`.
 - **Scope.** One scenario, one target model, one run per configuration, and 20 to 25
   cases per category, so category-level intervals are wide.
+
+## Technical report
+
+A write-up of this study, including the judge-validity analysis and an exploratory replication on a second model, is in [`paper/`](paper/) ([PDF](paper/paper.pdf)). It is a technical report, not a peer-reviewed paper; its limitations section says what a stronger version needs.
 
 ## Quick start
 

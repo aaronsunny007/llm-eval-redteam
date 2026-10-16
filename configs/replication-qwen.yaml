@@ -1,0 +1,15 @@
+# Exploratory replication on a second target model (Qwen 2.5 7B) with the same attacks, the same
+# Mistral guards and the same Qwen judge. Undefended vs layered only, to bound the run time.
+# The judge and target are the same model here, so self-preference can inflate judged safety.
+name: finassist-qwen2.5-7b
+scenario: builtin:scenarios/finassist.yaml
+attacks: [builtin:attacks]
+benign: [builtin:benign]
+target:
+  type: chat
+  model: {provider: ollama, model: "qwen2.5:7b", max_tokens: 400}
+guard_model: {provider: ollama, model: mistral, max_tokens: 160}
+judge:
+  model: {provider: ollama, model: "qwen2.5:7b", max_tokens: 300}
+defences: [none, layered]
+output_dir: results/finassist-qwen2.5-7b

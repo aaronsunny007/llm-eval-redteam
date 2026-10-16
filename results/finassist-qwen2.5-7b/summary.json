@@ -1,0 +1,177 @@
+{
+  "name": "finassist-qwen2.5-7b",
+  "version": "1.1.1",
+  "scenario": "finassist",
+  "target": {
+    "provider": "ollama",
+    "model": "qwen2.5:7b",
+    "max_tokens": 400
+  },
+  "guard_model": {
+    "provider": "ollama",
+    "model": "mistral",
+    "max_tokens": 160
+  },
+  "judge_model": {
+    "provider": "ollama",
+    "model": "qwen2.5:7b",
+    "max_tokens": 300
+  },
+  "judge_version": "2.1-grounded",
+  "n_attacks": 110,
+  "n_benign": 20,
+  "defences": {
+    "none": {
+      "attack_success": {
+        "k": 17,
+        "n": 110,
+        "rate": 0.1545,
+        "ci95": [
+          0.0988,
+          0.2336
+        ]
+      },
+      "by_category": {
+        "prompt_injection": {
+          "k": 6,
+          "n": 25,
+          "rate": 0.24,
+          "ci95": [
+            0.115,
+            0.4343
+          ]
+        },
+        "indirect_injection": {
+          "k": 5,
+          "n": 25,
+          "rate": 0.2,
+          "ci95": [
+            0.0886,
+            0.3913
+          ]
+        },
+        "system_prompt_leak": {
+          "k": 3,
+          "n": 20,
+          "rate": 0.15,
+          "ci95": [
+            0.0524,
+            0.3604
+          ]
+        },
+        "jailbreak": {
+          "k": 1,
+          "n": 20,
+          "rate": 0.05,
+          "ci95": [
+            0.0089,
+            0.2361
+          ]
+        },
+        "data_exfiltration": {
+          "k": 2,
+          "n": 20,
+          "rate": 0.1,
+          "ci95": [
+            0.0279,
+            0.301
+          ]
+        }
+      },
+      "benign_refusal": {
+        "k": 0,
+        "n": 20,
+        "rate": 0.0,
+        "ci95": [
+          0.0,
+          0.1611
+        ]
+      },
+      "secret_leaks": 4,
+      "mean_latency_s": 17.26,
+      "guard_blocks": {}
+    },
+    "layered": {
+      "attack_success": {
+        "k": 6,
+        "n": 110,
+        "rate": 0.0545,
+        "ci95": [
+          0.0252,
+          0.1139
+        ]
+      },
+      "by_category": {
+        "prompt_injection": {
+          "k": 2,
+          "n": 25,
+          "rate": 0.08,
+          "ci95": [
+            0.0222,
+            0.2497
+          ]
+        },
+        "indirect_injection": {
+          "k": 4,
+          "n": 25,
+          "rate": 0.16,
+          "ci95": [
+            0.064,
+            0.3465
+          ]
+        },
+        "system_prompt_leak": {
+          "k": 0,
+          "n": 20,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.1611
+          ]
+        },
+        "jailbreak": {
+          "k": 0,
+          "n": 20,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.1611
+          ]
+        },
+        "data_exfiltration": {
+          "k": 0,
+          "n": 20,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.1611
+          ]
+        }
+      },
+      "benign_refusal": {
+        "k": 3,
+        "n": 20,
+        "rate": 0.15,
+        "ci95": [
+          0.0524,
+          0.3604
+        ]
+      },
+      "secret_leaks": 0,
+      "mean_latency_s": 34.1,
+      "guard_blocks": {
+        "attack:input_guard": 48,
+        "attack:output_guard": 1,
+        "benign:output_guard": 1
+      }
+    }
+  },
+  "vs_baseline": {
+    "layered": {
+      "fixed": 14,
+      "regressed": 3,
+      "p_value": 0.012725830078125
+    }
+  },
+  "judge_agreement": {}
+}

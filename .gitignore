@@ -24,3 +24,10 @@ selftest-results/
 # tool state
 .deepeval/
 .streamlit/secrets.toml
+# LaTeX build products
+paper/*.aux
+paper/*.log
+paper/*.blg
+paper/*.out
+paper/build*
+paper/*.bbl
