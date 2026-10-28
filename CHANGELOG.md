@@ -7,6 +7,9 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- Project hygiene: `CITATION.cff`, `CONTRIBUTING.md`, `SECURITY.md` (including responsible-use
+  guidance), issue and pull-request templates, Dependabot, a pre-commit config, and a `mypy`
+  step in CI (the source type-checks cleanly with `check_untyped_defs`).
 - `paper/`: a technical report (LaTeX source and PDF) on the defence study and the validity of
   the hybrid judge, with `scripts/paper_stats.py` (bootstrap intervals, pairwise McNemar) and an
   exploratory replication on Qwen 2.5 7B (`configs/replication-qwen.yaml`,

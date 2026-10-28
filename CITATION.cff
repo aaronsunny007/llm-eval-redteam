@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "If you use this software or its reference results, please cite it as below."
+title: "llm-redteam: statistically grounded red-teaming of LLM applications"
+version: 1.1.1
+date-released: 2026-10-12
+license: MIT
+repository-code: "https://github.com/aaronsunny007/llm-eval-redteam"
+authors:
+  - family-names: Gandi
+    given-names: Aaron
+abstract: >-
+  An open-source harness that runs versioned attack sets against an LLM application,
+  scores responses with a hybrid judge validated against reference labels, compares
+  defences with Wilson intervals and exact paired tests, and gates releases in CI.
+keywords:
+  - LLM security
+  - red teaming
+  - prompt injection
+  - evaluation

@@ -19,6 +19,7 @@ jobs:
       - run: python -m pip install -e ".[dev]"
       - run: ruff check .
       - run: ruff format --check .
+      - run: mypy
       - run: llm-redteam validate
       - run: pytest -q
 
