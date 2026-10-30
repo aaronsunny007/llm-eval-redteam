@@ -7,6 +7,10 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- A one-click demo (`examples/demo/`, workflow "Try the demo", or `python examples/demo/run_demo.py`) that
+  red-teams a vulnerable toy app and a guarded one with no model, GPU or API key, and a static
+  results site (`scripts/build_site.py`, deployed by `.github/workflows/pages.yml`) with an explorer
+  over all 650 responses. Both are checked in CI.
 - Project hygiene: `CITATION.cff`, `CONTRIBUTING.md`, `SECURITY.md` (including responsible-use
   guidance), issue and pull-request templates, Dependabot, a pre-commit config, and a `mypy`
   step in CI (the source type-checks cleanly with `check_untyped_defs`).

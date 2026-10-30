@@ -31,3 +31,7 @@ paper/*.blg
 paper/*.out
 paper/build*
 paper/*.bbl
+
+# generated demo output and the built Pages site
+demo-results/
+site/

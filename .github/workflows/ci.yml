@@ -23,6 +23,27 @@ jobs:
       - run: llm-redteam validate
       - run: pytest -q
 
+  demo:
+    # The one-click demo must keep working: vulnerable app fails the gate, guarded app passes.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -e .
+      - run: python examples/demo/run_demo.py
+
+  site:
+    # The Pages site must keep building from the committed results.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python scripts/build_site.py
+
   wheel:
     runs-on: ubuntu-latest
     steps:

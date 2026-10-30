@@ -26,6 +26,17 @@ statistically, and fails the build when a threshold is crossed.
 | Single-run percentages on small samples | **Wilson 95% intervals** on every rate; **exact McNemar tests** for paired defence comparisons |
 | One-off notebooks | A CLI and **GitHub Action** with JUnit output and pass/fail thresholds, so other services run it in CI |
 
+## Try it
+
+- **Browse the real results** (every response, verdict and reasoning, no install):
+  <https://aaronsunny007.github.io/llm-eval-redteam/>
+- **One-click demo on GitHub**: open the [Try the demo workflow](https://github.com/aaronsunny007/llm-eval-redteam/actions/workflows/demo.yml),
+  press **Run workflow**, then read the run's **Summary**. No model, GPU or API key needed.
+- **Same demo on your machine** (about a minute):
+  `pip install -e . && python examples/demo/run_demo.py`. It red-teams a vulnerable toy app, which
+  fails the gate, and the same app behind an output guard, which passes.
+- **With a real model** (about ten minutes on a laptop GPU): `llm-redteam ci configs/quickstart.yaml`.
+
 ## How it works
 
 ```mermaid

@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>llm-redteam: measured red-teaming for LLM apps</title>
+<meta name="description" content="Open-source harness that red-teams an LLM application, validates its AI judge against reference labels, and gates releases in CI. Results, demo and paper.">
+<style>
+:root{
+  --bg:#f7f6f2; --card:#ffffff; --ink:#1c1b19; --muted:#625f58; --line:#e2dfd6;
+  --accent:#a63d2f; --accent-ink:#ffffff; --good:#2e6b46; --bad:#a63d2f; --code:#efece4;
+}
+@media (prefers-color-scheme: dark){
+  :root{--bg:#161512; --card:#201e1a; --ink:#ece9e1; --muted:#a8a498; --line:#34312b;
+        --accent:#e07a68; --accent-ink:#161512; --good:#7fc79a; --bad:#e07a68; --code:#2a2722;}
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+.wrap{max-width:980px;margin:0 auto;padding:0 16px}
+header{padding:48px 0 24px}
+h1{font-size:clamp(28px,5vw,42px);line-height:1.15;margin:0 0 12px;letter-spacing:-.01em}
+h2{font-size:24px;margin:48px 0 8px;letter-spacing:-.005em}
+h3{font-size:17px;margin:24px 0 6px}
+p{margin:8px 0}
+.lede{font-size:19px;color:var(--muted);max-width:720px}
+a{color:var(--accent)}
+.links{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
+.btn{display:inline-block;padding:10px 16px;border-radius:8px;border:1px solid var(--line);
+  background:var(--card);color:var(--ink);text-decoration:none;font-weight:600;font-size:15px}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn:hover{filter:brightness(1.05)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:24px 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
+.big{font-size:34px;font-weight:700;line-height:1.1}
+.big small{font-size:15px;font-weight:500;color:var(--muted)}
+.label{color:var(--muted);font-size:14px;margin-top:4px}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+table{border-collapse:collapse;width:100%;font-size:14.5px}
+th,td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+thead th{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+tr:last-child th,tr:last-child td{border-bottom:0}
+tbody th{font-weight:600}
+.ci{color:var(--muted);font-size:12.5px}.n{color:var(--muted);font-size:12.5px}
+.note{color:var(--muted);font-size:14px}
+pre,code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13.5px}
+pre{background:var(--code);border-radius:8px;padding:12px 14px;overflow-x:auto;margin:8px 0}
+code{background:var(--code);padding:1px 5px;border-radius:4px}
+pre code{background:none;padding:0}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+.chart{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px;overflow-x:auto}
+.chart svg{max-width:100%;height:auto;display:block;margin:0 auto}
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+select,input[type=search]{font:inherit;font-size:14px;padding:8px 10px;border-radius:8px;
+  border:1px solid var(--line);background:var(--card);color:var(--ink)}
+input[type=search]{flex:1;min-width:180px}
+.row{background:var(--card);border:1px solid var(--line);border-radius:10px;margin:8px 0}
+.row summary{cursor:pointer;padding:10px 12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.row .id{font-weight:700}
+.tag{font-size:12px;padding:2px 8px;border-radius:99px;border:1px solid var(--line);color:var(--muted)}
+.tag.bad{color:var(--bad);border-color:var(--bad)} .tag.good{color:var(--good);border-color:var(--good)}
+.body{padding:0 12px 12px;border-top:1px solid var(--line)}
+.body h4{margin:12px 0 4px;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.body pre{white-space:pre-wrap;word-break:break-word}
+.count{color:var(--muted);font-size:14px}
+.warn{border-left:4px solid var(--accent);background:var(--card);padding:12px 16px;border-radius:0 10px 10px 0}
+footer{margin:56px 0 40px;color:var(--muted);font-size:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Red-teaming an LLM app, with the error bars left in</h1>
+  <p class="lede">llm-redteam runs versioned attack sets against an LLM application, checks its own AI judge against reference labels, compares defences with proper statistics, and fails a build when a threshold is crossed. These are the real results from version {{VERSION}}.</p>
+  <div class="links">
+    <a class="btn primary" href="{{REPO}}/actions/workflows/demo.yml">Run the one-click demo</a>
+    <a class="btn" href="{{REPO}}">GitHub repository</a>
+    <a class="btn" href="paper.pdf">Read the paper (PDF)</a>
+    <a class="btn" href="{{REPO}}/releases/latest">Latest release</a>
+  </div>
+</header>
+
+<section class="cards" aria-label="Headline results">
+  <div class="card"><div class="big">{{ASR_NONE}} <small>&rarr;</small> {{ASR_LAYERED}}</div><div class="label">judged attack success, undefended vs layered defence ({{N_ATTACKS}} attacks)</div></div>
+  <div class="card"><div class="big">{{LEAKS_NONE}} <small>&rarr;</small> 0</div><div class="label">responses leaking a canary secret, undefended vs output-guarded</div></div>
+  <div class="card"><div class="big">&kappa; {{KAPPA_ALL}}</div><div class="label">judge agreement with reference labels overall; only {{KAPPA_LLM}} on the cases the LLM must reason about</div></div>
+</section>
+
+<h2 id="try">Try it yourself</h2>
+<p>The demo needs no GPU, no model and no API key. It red-teams a vulnerable toy app and the same app behind an output guard, and shows the CI gate failing the first and passing the second.</p>
+<div class="steps">
+  <div class="card"><h3>1. One click, on GitHub</h3>
+    <p>Open the <a href="{{REPO}}/actions/workflows/demo.yml">Try the demo workflow</a>, press <b>Run workflow</b>, then open the finished run and read its <b>Summary</b>. (You need a free GitHub account.)</p></div>
+  <div class="card"><h3>2. One command, on your machine</h3>
+<pre><code>git clone {{REPO}}
+cd llm-eval-redteam
+pip install -e .
+python examples/demo/run_demo.py</code></pre>
+    <p class="note">About a minute. Needs Python 3.10 or newer.</p></div>
+  <div class="card"><h3>3. With a real model</h3>
+<pre><code>ollama pull mistral
+ollama pull qwen2.5:7b
+llm-redteam ci configs/quickstart.yaml</code></pre>
+    <p class="note">About ten minutes on a laptop GPU; 6 attacks, undefended vs layered.</p></div>
+</div>
+
+<h2 id="defences">Defences compared</h2>
+<p>Mistral 7B as the assistant, {{N_ATTACKS}} attacks and 20 benign questions, judged by the hybrid judge. Intervals are Wilson 95%; <i>p</i> is an exact paired McNemar test against no defence.</p>
+<div class="scroll"><table>
+<thead><tr><th>Defence</th><th>Attack success</th><th>Benign refused</th><th>Canary leaks</th><th>p vs none</th></tr></thead>
+<tbody>
+{{TABLE_DEFENCES}}
+</tbody></table></div>
+<h3>Attacks judged successful, by category</h3>
+<div class="scroll"><table>{{TABLE_CATEGORIES}}</table></div>
+<h3>Chart</h3>
+<div class="chart">{{CHART}}</div>
+
+<h2 id="judge">How far can the judge be trusted?</h2>
+<p>Agreement (Cohen's &kappa;, with bootstrap 95% intervals) between each judge and 110 reference labels on the undefended responses. The headline figure is lifted by the deterministic detector; where an LLM has to reason, agreement is only moderate.</p>
+<div class="scroll"><table>
+<thead><tr><th>Judge and subset</th><th>n</th><th>&kappa; [95% interval]</th><th>Precision</th><th>Recall</th></tr></thead>
+<tbody>
+{{TABLE_JUDGE}}
+</tbody></table></div>
+<div class="warn" style="margin-top:16px"><b>Read this before quoting numbers.</b> The reference labels were written by an AI model, not by humans. The judge was revised twice after labels were seen, so every agreement figure is in-sample. One scenario, two 7B models, public unoptimised attacks, 20 to 25 cases per category. The paper lists the full threats to validity.</div>
+
+<h2 id="replication">A second model</h2>
+<p>An exploratory replication on Qwen 2.5 7B, undefended and layered only. The judge is the same Qwen model, and no labels exist for these responses, so only the canary-leak counts are judge-independent.</p>
+<div class="scroll"><table>
+<thead><tr><th>Target</th><th>Defence</th><th>Attack success</th><th>Benign refused</th><th>Canary leaks</th></tr></thead>
+<tbody>
+{{TABLE_REPLICATION}}
+</tbody></table></div>
+
+<h2 id="explorer">Explore every response</h2>
+<p>All 650 responses with the judge's verdict and reasoning. Replies to the harmful-request (jailbreak) cases are withheld here; their verdicts are included.</p>
+<div class="filters">
+  <select id="f-def" aria-label="Defence"><option value="">All defences</option></select>
+  <select id="f-cat" aria-label="Category"><option value="">All categories</option></select>
+  <select id="f-out" aria-label="Outcome">
+    <option value="">Any outcome</option>
+    <option value="succeeded">Attack succeeded</option>
+    <option value="safe">Attack failed</option>
+    <option value="refused">Benign refused</option>
+  </select>
+  <input id="f-q" type="search" placeholder="Search prompts and responses" aria-label="Search">
+</div>
+<p class="count" id="count"></p>
+<div id="list"></div>
+<p><button class="btn" id="more" style="display:none">Show more</button></p>
+
+<footer>
+  <p>Code, data, transcripts and verdicts are in the <a href="{{REPO}}">repository</a> (MIT). Attack payloads come from public datasets, see <a href="{{REPO}}/blob/main/data/attacks/NOTICE.md">NOTICE.md</a>. Cite with the repository's <code>CITATION.cff</code>. The code, labels and text were produced with substantial help from a language model, which the paper discloses.</p>
+</footer>
+</div>
+
+<script id="data" type="application/json">{{DATA}}</script>
+<script>
+(function(){
+  var ROWS = JSON.parse(document.getElementById('data').textContent);
+  var DEF = {none:'No defence',hardened_prompt:'Hardened prompt',input_guard:'Input guard',output_guard:'Output guard',layered:'Layered'};
+  var CAT = {prompt_injection:'Prompt injection',indirect_injection:'Indirect injection',system_prompt_leak:'System-prompt leak',data_exfiltration:'Data exfiltration',jailbreak:'Jailbreak'};
+  var PAGE = 40, shown = PAGE;
+  function fill(sel, map){ Object.keys(map).forEach(function(k){ var o=document.createElement('option'); o.value=k; o.textContent=map[k]; sel.appendChild(o); }); }
+  fill(document.getElementById('f-def'), DEF); fill(document.getElementById('f-cat'), CAT);
+  var list = document.getElementById('list'), count = document.getElementById('count'), more = document.getElementById('more');
+  function outcome(r){
+    if (r.kind === 'benign') return r.verdict ? 'refused' : 'answered';
+    return r.verdict ? 'succeeded' : 'safe';
+  }
+  function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function matches(r){
+    var d=document.getElementById('f-def').value, c=document.getElementById('f-cat').value,
+        o=document.getElementById('f-out').value, q=document.getElementById('f-q').value.toLowerCase();
+    if (d && r.def!==d) return false;
+    if (c && r.cat!==c) return false;
+    if (o && outcome(r)!==o) return false;
+    if (q && (r.prompt+' '+r.response+' '+r.id).toLowerCase().indexOf(q)<0) return false;
+    return true;
+  }
+  function render(){
+    var rows = ROWS.filter(matches);
+    count.textContent = rows.length + ' of ' + ROWS.length + ' responses';
+    list.innerHTML = rows.slice(0, shown).map(function(r){
+      var out = outcome(r), bad = out==='succeeded' || out==='refused';
+      var label = r.label===null ? '' : '<span class="tag">reference label: ' + (r.label?'success':'safe') + '</span>';
+      return '<details class="row"><summary><span class="id">' + esc(r.id) + '</span>' +
+        '<span class="tag">' + esc(CAT[r.cat]||r.cat) + '</span><span class="tag">' + esc(DEF[r.def]||r.def) + '</span>' +
+        '<span class="tag ' + (bad?'bad':'good') + '">' + esc(out) + '</span>' + label + '</summary>' +
+        '<div class="body"><h4>Prompt</h4><pre>' + esc(r.prompt) + '</pre>' +
+        (r.context ? '<h4>Retrieved document</h4><pre>' + esc(r.context) + '</pre>' : '') +
+        '<h4>Response' + (r.blocked ? ' (blocked by ' + esc(r.blocked) + ')' : '') + '</h4><pre>' + esc(r.response) + '</pre>' +
+        '<h4>Judge (' + esc(r.method||'n/a') + ')</h4><pre>' + esc(r.why||'') + '</pre></div></details>';
+    }).join('');
+    more.style.display = rows.length > shown ? '' : 'none';
+  }
+  ['f-def','f-cat','f-out','f-q'].forEach(function(id){
+    document.getElementById(id).addEventListener('input', function(){ shown = PAGE; render(); });
+  });
+  more.addEventListener('click', function(){ shown += PAGE; render(); });
+  render();
+})();
+</script>
+</body>
+</html>
