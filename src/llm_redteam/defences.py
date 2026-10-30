@@ -87,7 +87,7 @@ _INJECTION_PATTERNS = [
     r"disregard (?:all |any |the |your )?(?:previous |prior |above )?(?:instructions|rules|guidelines)",
     r"forget (?:all |your )?(?:previous |prior )?(?:instructions|rules)",
     r"\b(?:system|developer|hidden|initial) (?:prompt|instructions|message)\b",
-    r"\b(?:jailbreak|DAN|do anything now|developer mode|god mode|unfiltered mode)\b",
+    r"\b(?:jailbreak|(?-i:DAN)|do anything now|developer mode|god mode|unfiltered mode)\b",
     r"\byou are (?:now|no longer)\b",
     r"\bnew instructions?\b",
     r"\b(?:no|without) (?:restrictions|filters|limitations|rules)\b",

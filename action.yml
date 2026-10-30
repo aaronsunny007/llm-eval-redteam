@@ -10,7 +10,7 @@ inputs:
     description: "Path to the run config YAML in your repository."
     required: true
   args:
-    description: "Extra arguments for `llm-redteam ci`, e.g. `--set target.url=http://localhost:9000/ask`."
+    description: "Extra arguments for `llm-redteam ci`, split on spaces (no quoting, no shell expansion), e.g. `--set target.url=http://localhost:9000/ask`."
     required: false
     default: ""
   python-version:
@@ -49,22 +49,32 @@ runs:
     - name: Install Ollama
       if: inputs.install-ollama == 'true'
       shell: bash
+      env:
+        OLLAMA_MODELS: ${{ inputs.ollama-models }}
       run: |
         curl -fsSL https://ollama.com/install.sh | sh
         (ollama serve > /tmp/ollama.log 2>&1 &)
         for i in $(seq 1 30); do curl -sf http://localhost:11434/api/tags >/dev/null && break; sleep 1; done
-        for m in ${{ inputs.ollama-models }}; do ollama pull "$m"; done
+        set -f
+        for m in $OLLAMA_MODELS; do ollama pull "$m"; done
 
     - name: Resolve results directory
       id: dir
       shell: bash
+      env:
+        CONFIG: ${{ inputs.config }}
       run: |
-        dir=$(python -c "from llm_redteam.config import load_config; print(load_config('${{ inputs.config }}').out)")
+        dir=$(python -c "import sys; from llm_redteam.config import load_config; print(load_config(sys.argv[1]).out)" "$CONFIG")
         echo "dir=$dir" >> "$GITHUB_OUTPUT"
 
     - name: Run red-team gate
       shell: bash
-      run: llm-redteam ci "${{ inputs.config }}" ${{ inputs.args }}
+      env:
+        CONFIG: ${{ inputs.config }}
+        ARGS: ${{ inputs.args }}
+      run: |
+        set -f   # split ARGS on spaces, but never expand globs or run it as shell code
+        llm-redteam ci "$CONFIG" $ARGS
 
     - name: Upload results
       if: always()

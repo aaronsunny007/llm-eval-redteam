@@ -1,3 +1,4 @@
+# Ports are published on this machine only (no login on either service).
 # docker compose up -d ollama dashboard
 # docker compose run --rm redteam run configs/benchmark.yaml
 services:
@@ -6,7 +7,7 @@ services:
     volumes:
       - ollama:/root/.ollama
     ports:
-      - "11434:11434"
+      - "127.0.0.1:11434:11434"
 
   redteam:
     build: .
@@ -19,7 +20,7 @@ services:
     build: .
     entrypoint: ["streamlit", "run", "dashboard/app.py", "--server.port=8501", "--server.address=0.0.0.0"]
     ports:
-      - "8501:8501"
+      - "127.0.0.1:8501:8501"
     volumes:
       - ./results:/app/results
       - ./data/labels:/app/data/labels

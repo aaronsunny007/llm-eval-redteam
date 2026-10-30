@@ -65,11 +65,19 @@ much better, and judging uses the *existing* responses, so nothing is regenerate
    .venv\Scripts\llm-redteam run configs\benchmark-gemini-judge.yaml --skip-generate --set judge.model.model=THE-NAME-YOU-CHOSE
    ```
 
-   It waits and retries when the free tier says "slow down", and it is resumable: if it stops,
-   run the same command again. Results go to `results/finassist-mistral-gemini-judge/`.
+   It waits and retries when the free tier says "slow down" (about a minute per call). If a
+   *daily* limit is used up it stops with a 429 error; that is fine, because every verdict is
+   saved as it finishes. Run the same command again later, with the **same** model name. The
+   run refuses to continue with a different model, so two judges never get mixed in one file;
+   to switch models, delete `judgements.*.jsonl` in that folder or use a new `output_dir`.
+   Results go to `results/finassist-mistral-gemini-judge/`.
 5. Tell me when it finishes. I will compare the Qwen and Gemini judges against your human labels
    and put the numbers in the README and the paper.
 
 What leaves your machine: the 650 transcripts (public benchmark prompts, model replies and
 fictitious canary strings) are sent to Google's API for judging. Nothing about you is sent.
+Google's terms for the free tier allow it to use submitted content to improve its products
+(check the current terms; a key with billing enabled is handled differently). The jailbreak
+transcripts include model replies to fraud requests, so use a paid key or skip this step if
+that matters to you.
 Any OpenAI-compatible provider works the same way; only the three `judge.model` fields change.

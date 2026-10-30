@@ -22,7 +22,10 @@ judge:
     model: gemini-2.5-flash          # replace with a name printed by scripts/list_models.py
     base_url: https://generativelanguage.googleapis.com/v1beta/openai
     api_key_env: GEMINI_API_KEY
-    max_tokens: 400
+    # A floor for every judge call. Gemini 2.5 models count hidden "thinking" tokens against it,
+    # so a small value can leave an empty reply. If your model supports it, add
+    # `reasoning_effort: none` here to switch thinking off.
+    max_tokens: 2048
 defences: [none, hardened_prompt, input_guard, output_guard, layered]
 gold_labels: data/labels/human.jsonl   # judge agreement is measured against the HUMAN labels
 output_dir: results/finassist-mistral-gemini-judge

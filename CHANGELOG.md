@@ -25,6 +25,18 @@ All notable changes to this project are documented here. The format follows
 - `examples/ledger/`: a drop-in red-team workflow, config and scenario for the Ledger API
   (85 attacks, Gemini judge, weekly gate). Tested against fake servers only.
 
+### Fixed
+- HTTP targets: a firewall refusal (HTTP 403/451) is recorded as a blocked request instead of
+  aborting the run; a wrong `response_path` or non-JSON reply stops with a clear message.
+- Hosted judges: `max_tokens` is a floor for OpenAI-compatible models (reasoning models spend
+  tokens thinking), and `reasoning_effort` can be set in the model config.
+- Judging refuses to resume a file written by a different judge, so verdicts from two models
+  are never mixed.
+- The input guard no longer blocks the name "Dan" (only the uppercase jailbreak name `DAN`).
+- `docker-compose.yml` publishes Ollama and the dashboard on 127.0.0.1 only.
+- The GitHub Action passes its inputs through environment variables, not into shell text;
+  `args` is split on spaces with no quoting or glob expansion.
+
 ## [1.1.1] - 2026-10-12
 
 ### Fixed

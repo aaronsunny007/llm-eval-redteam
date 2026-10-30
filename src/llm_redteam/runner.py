@@ -146,11 +146,14 @@ def judge_all(
     out: dict[str, list[Judgement]] = {}
     for name, judge in judges.items():
         path = judgements_path(cfg, name)
-        done = (
-            {(j.defence, j.case_id) for j in read_jsonl(path, Judgement)}
-            if path.exists()
-            else set()
-        )
+        previous = read_jsonl(path, Judgement) if path.exists() else []
+        other = sorted({j.judge for j in previous} - {judge.name})
+        if other:
+            raise RuntimeError(
+                f"{path} already holds verdicts from {other}, not {judge.name}. Resuming would "
+                "mix judges: delete the file or use a new output_dir."
+            )
+        done = {(j.defence, j.case_id) for j in previous}
         todo = [
             t for t in transcripts
             if (t.defence, t.case_id) not in done

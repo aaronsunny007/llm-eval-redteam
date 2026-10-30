@@ -119,9 +119,11 @@ class OpenAICompatChat(ChatModel):
         seed: int = 7,
         max_tokens: int = 400,
         timeout: float = 300.0,
+        reasoning_effort: str | None = None,
     ) -> None:
         self.model = model
         self.name = f"openai:{model}"
+        self.reasoning_effort = reasoning_effort
         self.base_url = base_url.rstrip("/")
         self.api_key = os.getenv(api_key_env, "")
         self.temperature, self.seed, self.max_tokens = temperature, seed, max_tokens
@@ -133,8 +135,12 @@ class OpenAICompatChat(ChatModel):
             "messages": messages,
             "temperature": self.temperature,
             "seed": self.seed,
-            "max_tokens": max_tokens or self.max_tokens,
+            # Hosted reasoning models count hidden thinking tokens against this limit, so the
+            # configured value is a floor: a smaller per-call cap could leave an empty reply.
+            "max_tokens": max(max_tokens or 0, self.max_tokens),
         }
+        if self.reasoning_effort:
+            body["reasoning_effort"] = self.reasoning_effort
         if json_schema is not None:
             body["response_format"] = {"type": "json_object"}
         headers = {"Authorization": f"Bearer {self.api_key}"} if self.api_key else {}
@@ -219,6 +225,11 @@ class ChatTarget(Target):
         return self.model.chat(messages)
 
 
+#: Statuses a firewall or content filter uses to refuse a request. They count as a block, not a
+#: crash. Other 4xx codes (401, 404, 422...) usually mean a wrong URL, token or body template, so
+#: they still stop the run instead of making every attack look defeated.
+REJECTED_STATUSES = frozenset({403, 451})
+
 _PLACEHOLDER = re.compile(r"\$\{(prompt|context|context_text|ENV:[A-Za-z_][A-Za-z0-9_]*)\}")
 
 
@@ -275,9 +286,18 @@ class HTTPTarget(Target):
         try:
             r = _post(self._client, self.url, json=body, headers=headers)
             r.raise_for_status()
+        except httpx.HTTPStatusError as exc:
+            if exc.response.status_code in REJECTED_STATUSES:
+                return f"[request rejected by the target: HTTP {exc.response.status_code}]"
+            raise ModelError(f"{self.name}: {exc}") from exc
         except httpx.HTTPError as exc:
             raise ModelError(f"{self.name}: {exc}") from exc
-        node: Any = r.json()
-        for part in self.response_path.split("."):
-            node = node[int(part)] if isinstance(node, list) else node[part]
+        try:
+            node: Any = r.json()
+            for part in self.response_path.split("."):
+                node = node[int(part)] if isinstance(node, list) else node[part]
+        except (ValueError, KeyError, IndexError, TypeError) as exc:
+            raise ModelError(
+                f"{self.name}: no value at response_path {self.response_path!r} in {r.text[:200]!r}"
+            ) from exc
         return node if isinstance(node, str) else json.dumps(node)
