@@ -36,6 +36,8 @@ statistically, and fails the build when a threshold is crossed.
   `pip install -e . && python examples/demo/run_demo.py`. It red-teams a vulnerable toy app, which
   fails the gate, and the same app behind an output guard, which passes.
 - **With a real model** (about ten minutes on a laptop GPU): `llm-redteam ci configs/quickstart.yaml`.
+- **Make the results stronger**: label the responses yourself and re-judge with a hosted model,
+  see [`docs/human-labels-and-stronger-judge.md`](docs/human-labels-and-stronger-judge.md).
 
 ## How it works
 

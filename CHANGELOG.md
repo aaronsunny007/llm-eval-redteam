@@ -11,6 +11,10 @@ All notable changes to this project are documented here. The format follows
   red-teams a vulnerable toy app and a guarded one with no model, GPU or API key, and a static
   results site (`scripts/build_site.py`, deployed by `.github/workflows/pages.yml`) with an explorer
   over all 650 responses. Both are checked in CI.
+- Blind human labelling (the dashboard now writes `data/labels/human.jsonl`, no pre-filled AI
+  labels), `scripts/compare_labels.py` (human-vs-AI and judge-vs-human agreement), and a
+  stronger-judge path (`configs/benchmark-gemini-judge.yaml`, `scripts/prepare_rejudge.py`,
+  `scripts/list_models.py`), with a step-by-step guide in `docs/`.
 - Project hygiene: `CITATION.cff`, `CONTRIBUTING.md`, `SECURITY.md` (including responsible-use
   guidance), issue and pull-request templates, Dependabot, a pre-commit config, and a `mypy`
   step in CI (the source type-checks cleanly with `check_untyped_defs`).

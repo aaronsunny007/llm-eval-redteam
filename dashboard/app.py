@@ -21,7 +21,7 @@ from llm_redteam.schema import GoldLabel, Judgement, Transcript
 ROOT = Path(__file__).resolve().parents[1]
 RESULTS = ROOT / "results"
 DATA = ROOT / "data"
-GOLD = DATA / "labels" / "gold.jsonl"
+GOLD = DATA / "labels" / "human.jsonl"  # blind human labels; the AI labels live in gold.jsonl
 SUGGESTIONS = DATA / "labels" / "suggestions.jsonl"
 
 st.set_page_config(page_title="LLM Red-Team", page_icon="🛡️", layout="wide")
