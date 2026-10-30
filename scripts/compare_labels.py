@@ -20,7 +20,13 @@ from llm_redteam.metrics import agreement
 
 
 def main(run: Path) -> None:
-    human = {g["case_id"]: g for g in read(Path("data/labels/human.jsonl"))}
+    human_file = Path("data/labels/human.jsonl")
+    if not human_file.exists():
+        raise SystemExit(
+            f"{human_file} not found: label cases on the dashboard's Label page first, and run "
+            "this from the repository root"
+        )
+    human = {g["case_id"]: g for g in read(human_file)}
     ai = {g["case_id"]: g for g in read(Path("data/labels/gold.jsonl"))}
     common = sorted(set(human) & set(ai))
     if not common:

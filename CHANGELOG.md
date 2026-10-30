@@ -33,6 +33,9 @@ All notable changes to this project are documented here. The format follows
 - Judging refuses to resume a file written by a different judge, so verdicts from two models
   are never mixed.
 - The input guard no longer blocks the name "Dan" (only the uppercase jailbreak name `DAN`).
+- Label page: opens first (the Results page shows judge verdicts), pre-fills nothing, and offers
+  only the Mistral run, so labels cannot be saved against another model's responses.
+  `scripts/compare_labels.py` explains a missing `human.jsonl` instead of crashing, and has tests.
 - `docker-compose.yml` publishes Ollama and the dashboard on 127.0.0.1 only.
 - The GitHub Action passes its inputs through environment variables, not into shell text;
   `args` is split on spaces with no quoting or glob expansion.

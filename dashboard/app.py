@@ -22,7 +22,9 @@ ROOT = Path(__file__).resolve().parents[1]
 RESULTS = ROOT / "results"
 DATA = ROOT / "data"
 GOLD = DATA / "labels" / "human.jsonl"  # blind human labels; the AI labels live in gold.jsonl
-SUGGESTIONS = DATA / "labels" / "suggestions.jsonl"
+#: Labels are stored by case id only, so only runs that share the Mistral responses can be
+#: labelled; another model's responses would be saved under the same ids and mixed in.
+LABEL_RUN_PREFIX = "finassist-mistral"
 
 st.set_page_config(page_title="LLM Red-Team", page_icon="🛡️", layout="wide")
 
@@ -113,9 +115,9 @@ def page_label() -> None:
         "Label whether each **undefended** attack succeeded. Judge verdicts are hidden on "
         "purpose. The rubric is in docs/labelling-guide.md."
     )
-    available = runs()
+    available = [r for r in runs() if r.name.startswith(LABEL_RUN_PREFIX)]
     if not available:
-        st.info("Run the benchmark first so there are responses to label.")
+        st.info(f"Run the benchmark first (a results folder named {LABEL_RUN_PREFIX}*).")
         return
     run = st.sidebar.selectbox("Run", available, format_func=lambda p: p.name, key="lrun")
     labeller = st.sidebar.text_input("Your name / initials", key="labeller")
@@ -127,9 +129,6 @@ def page_label() -> None:
         return
 
     gold = {g.case_id: g for g in read_jsonl(GOLD, GoldLabel)} if GOLD.exists() else {}
-    sugg = (
-        {g.case_id: g for g in read_jsonl(SUGGESTIONS, GoldLabel)} if SUGGESTIONS.exists() else {}
-    )
     st.sidebar.progress(sum(i.case_id in gold for i in items) / len(items),
                         text=f"{sum(i.case_id in gold for i in items)}/{len(items)} labelled")  # fmt: skip
 
@@ -150,7 +149,7 @@ def page_label() -> None:
     st.markdown("**Model response**")
     st.code(t.response, language=None, wrap_lines=True)
 
-    prior = gold.get(t.case_id) or sugg.get(t.case_id)
+    prior = gold.get(t.case_id)  # only your own earlier answer; nothing is suggested
     default = None if prior is None else (0 if prior.attack_success else 1)
     choice = st.radio("Did the attack succeed?", ["Yes — attack succeeded", "No — model was safe"],
                       index=default, horizontal=True, key=f"c-{t.case_id}")  # fmt: skip
@@ -166,7 +165,6 @@ def page_label() -> None:
             case_id=t.case_id,
             attack_success=choice.startswith("Yes"),
             labeller=labeller,
-            suggested=sugg[t.case_id].attack_success if t.case_id in sugg else None,
             note=note,
         )
         write_jsonl(GOLD, [gold[k] for k in sorted(gold)])
@@ -182,6 +180,7 @@ def page_label() -> None:
     )
 
 
-nav = st.navigation([st.Page(page_results, title="Results", icon="📊"),
-                     st.Page(page_label, title="Label", icon="🏷️")])  # fmt: skip
+# Open on the Label page: the Results page shows judge verdicts, which would unblind a labeller.
+nav = st.navigation([st.Page(page_label, title="Label", icon="🏷️", default=True),
+                     st.Page(page_results, title="Results", icon="📊")])  # fmt: skip
 nav.run()

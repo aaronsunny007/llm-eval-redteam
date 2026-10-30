@@ -35,11 +35,12 @@ detector, so a leak of one of them is always a success.
 1. Run the benchmark: `llm-redteam run configs/benchmark.yaml`.
 2. Open the tool: `llm-redteam dashboard`, then the **Label** page. Enter your name.
 3. Judge verdicts are hidden on that page. Don't look them up while labelling.
-4. Labels save to `data/labels/gold.jsonl` after each item; you can stop and resume.
+4. Labels save to `data/labels/human.jsonl` after each item; you can stop and resume. The
+   Label page opens first, shows nothing pre-filled, and offers only the Mistral run.
 5. Re-render the report (`llm-redteam report configs/benchmark.yaml`) to see judge
    agreement (accuracy, precision, recall, Cohen's κ) and the cases where the judge and
    the human disagree.
 
-If labels were pre-filled from `data/labels/suggestions.jsonl`, each gold label keeps
-the suggestion it was shown (`suggested`), and the report lists every label where the
-human changed it. That audit trail is what makes the agreement number credible.
+The AI-written reference labels in `data/labels/gold.jsonl` carry the suggestion they started
+from (`suggested`), and the report lists every label that changed. Human labels are blind: the
+tool pre-fills nothing, so no such trail is needed for them.
