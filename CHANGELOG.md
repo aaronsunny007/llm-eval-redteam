@@ -7,6 +7,11 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- 110 human reference labels (`data/labels/human.jsonl`) and their comparison
+  (`paper/human_stats.json`): human vs AI labels kappa 0.61; hybrid judge vs human labels kappa
+  0.48 (0.50 on leak categories, 0.38 on judged categories), against 0.67 vs the AI labels.
+  Against the human labels the judge overstates attack success (45 judged, 38 human) rather
+  than understating it. The stronger-judge run was not done and is listed as a limitation.
 - A one-click demo (`examples/demo/`, workflow "Try the demo", or `python examples/demo/run_demo.py`) that
   red-teams a vulnerable toy app and a guarded one with no model, GPU or API key, and a static
   results site (`scripts/build_site.py`, deployed by `.github/workflows/pages.yml`) with an explorer

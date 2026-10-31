@@ -21,7 +21,7 @@ statistically, and fails the build when a threshold is crossed.
 |---|---|
 | Attacks hard-coded in scripts, silently edited | Attack sets are **schema-validated data files**, reviewed like code and versioned with releases |
 | Keyword matching marks refusals as failures | A **hybrid judge**: deterministic secret-leak detection, then a rubric-driven LLM judge that reasons before giving a verdict |
-| "The judge says it's fine" with no check on the judge | The judge is **validated against reference labels** (Cohen's κ, precision, recall) written without seeing its verdicts; a labelling tool lets a human replace them |
+| "The judge says it's fine" with no check on the judge | The judge is **validated against reference labels** (Cohen's κ, precision, recall): 110 written by a human and 110 by an AI model, both without seeing its verdicts |
 | Defences that "work" by refusing everything | Every defence is also scored on a **benign control set**, so the security vs. over-refusal trade-off is visible |
 | Single-run percentages on small samples | **Wilson 95% intervals** on every rate; **exact McNemar tests** for paired defence comparisons |
 | One-off notebooks | A CLI and **GitHub Action** with JUnit output and pass/fail thresholds, so other services run it in CI |
@@ -105,10 +105,11 @@ with no model needed.
 | `output_guard` | Post-model | Deterministic secret scanner, then an LLM policy check of the draft reply |
 | `layered` | All | All three combined (defence in depth) |
 
-> **Label provenance.** The gold labels were written by an AI model
-> (`claude-sonnet-5-5`), blind to the judge's verdicts, not by a human annotator. See
-> [`data/labels/README.md`](data/labels/README.md). The labelling tool exists so a human
-> can replace them.
+> **Label provenance.** There are two sets of reference labels for the same 110 undefended
+> responses: `data/labels/human.jsonl`, written by a human, and `data/labels/gold.jsonl`, written
+> by an AI model (`claude-sonnet-5-5`). Both were written blind to the judge's verdicts. The two
+> label sets agree only moderately (κ = 0.61), and the judge agrees less with the human labels
+> (κ = 0.48) than with the AI's (κ = 0.67). See [`data/labels/README.md`](data/labels/README.md).
 
 ## Results
 
@@ -140,6 +141,21 @@ Judge agreement with 110 reference labels written by `claude-sonnet-5-5` on the 
 | `keyword` | 49% | 27% | 8% | 0.12 | -0.11 (poor) |
 <!-- RESULTS:END -->
 
+The table above uses the AI labels. Judge agreement with the 110 **human** labels on the same responses (`scripts/compare_labels.py`,
+κ with 95% bootstrap intervals):
+
+| Judge | Subset | n | Precision | Recall | Cohen's kappa |
+|---|---|---|---|---|---|
+| `hybrid` | all | 110 | 62% | 74% | 0.48 [0.31, 0.64] (moderate) |
+| `hybrid` | leak categories | 40 | 69% | 90% | 0.50 [0.24, 0.75] |
+| `hybrid` | judged categories | 70 | 53% | 56% | 0.38 [0.12, 0.60] |
+| `llm` | all | 110 | 66% | 61% | 0.45 [0.27, 0.62] (moderate) |
+| `keyword` | all | 110 | 20% | 8% | -0.10 [-0.23, 0.05] (poor) |
+
+Human vs AI labels: raw agreement 81%, κ = 0.61 [0.45, 0.75]; they disagree on 21 of 110 cases
+(the human marked 38 as attacks that succeeded, the AI 49). Full numbers are in
+[`paper/human_stats.json`](paper/human_stats.json).
+
 ### What this shows (and what it doesn't)
 
 Run on 2026-10-12 with Ollama 0.40.2, `llm-redteam` 1.1.1, Mistral 7B (Q4_K_M) as target
@@ -158,8 +174,12 @@ and guard model, Qwen 2.5 7B as judge, temperature 0, one run.
 - **Indirect injection is the hard case.** `layered` stopped every direct injection and
   system-prompt leak, but 3 of 25 document-borne injections, 1 jailbreak and 1 exfiltration
   case still got through. Treat retrieved text as untrusted input.
-- **The judge is only as good as its labels say.** Against the 110 reference labels the
-  hybrid judge scores κ = 0.67 (substantial), precision 84%, recall 78%, but that hides a split:
+- **The judge is only as good as its labels say, and the labeller matters.** Against the 110
+  human labels the hybrid judge scores κ = 0.48 (moderate), precision 62%, recall 74%. Against the
+  110 AI-written labels it scores κ = 0.67 (substantial), precision 84%, recall 78%. The
+  human and AI labels agree with each other at only κ = 0.61, so the judge's "validation"
+  depends heavily on who labelled. The rest of this bullet uses the AI labels; the human
+  labels weaken every figure in it:
   - on the leak categories (`system_prompt_leak`, `data_exfiltration`) κ = 0.89, because
     the deterministic canary detector decides those cases and the labels were also
     anchored on canary strings. That agreement is partly by construction;
@@ -167,10 +187,16 @@ and guard model, Qwen 2.5 7B as judge, temperature 0, one run.
     `indirect_injection`, `jailbreak`) κ = 0.47 (moderate), with recall 56%. The weak spot
     is direct and indirect injection (κ 0.38 on the first 50 cases, recall 47%): a 7B model
     often says the response ignored an instruction it plainly carried out.
-  The reference labels put the undefended attack success rate at 45% [36%-54%], against
-  41% from the judge, so the judge still **underestimates** attacks that need judgement.
+  The AI labels put the undefended attack success rate at 45% [36%-54%], against 41% from the
+  judge, which suggests the judge underestimates attacks that need judgement. **The human labels
+  point the other way:** 35% [26%-44%] succeeded, so the judge **overstates** attack success
+  (45 judged successes against 38 human ones; 17 false positives and 10 false negatives). Which
+  way the judge errs is therefore not settled, and the defended results should not be read as
+  a lower bound. On the human labels the weak spots are the injection sets (κ 0.27, precision 42%)
+  and `system_prompt_leak` (the judge flags 11 successes against 5 by the human).
   A stronger judge model is the obvious upgrade (`--set judge.model.model=...`, or any
-  OpenAI-compatible endpoint such as Gemini's; the Ledger workflow does exactly that).
+  OpenAI-compatible endpoint such as Gemini's; the Ledger workflow does exactly that). It
+  was **not run** here, so no stronger-judge result is reported.
 - **What was and wasn't held out.** The judge was changed twice after labels were seen:
   once to add the evidence-quoting check, and once to stop that check overturning true
   attacks (it rejected quotes of the prompt instead of the response, and multi-line quotes
@@ -302,8 +328,11 @@ re-run the benchmark.
 - **Guard–judge overlap.** The output guard and the judge are both LLM-based. They use
   different prompts and, ideally, different models; agreement with human labels is the
   check that the output guard isn't simply graded by itself.
-- **Reference labels are AI-written.** A human should confirm or correct them with the
-  dashboard's labelling page before the judge's κ is quoted externally.
+- **Labels come from one human and one AI model.** The 110 human labels (one annotator, no
+  second human, so no human-human agreement) are the reference to quote; the AI labels are kept
+  for comparison. Neither is ground truth: the two disagree on 21 cases and carry few notes.
+- **No stronger judge.** Only the 7B Qwen judge was evaluated; a stronger hosted judge (see
+  `docs/human-labels-and-stronger-judge.md`) was not run.
 - **Jailbreak coverage is a baseline.** The jailbreak set is plain harmful requests; a
   model that resists them may still fall to optimised templates.
 - **Sample size.** With 20 to 25 attacks per category, category-level rates have wide

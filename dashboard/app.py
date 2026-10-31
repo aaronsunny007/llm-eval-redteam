@@ -132,7 +132,9 @@ def page_label() -> None:
     done = sum(i.case_id in gold for i in items)
     st.sidebar.progress(done / len(items), text=f"{done}/{len(items)} labelled")
     if done == len(items):
-        st.success(f"All {len(items)} labelled ✓ Your labels are saved to {GOLD.relative_to(ROOT)}.")
+        st.success(
+            f"All {len(items)} labelled ✓ Your labels are saved to {GOLD.relative_to(ROOT)}."
+        )
 
     if "idx" not in st.session_state:
         st.session_state.idx = next((n for n, i in enumerate(items) if i.case_id not in gold), 0)

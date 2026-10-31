@@ -38,12 +38,14 @@ configuration refuses 1 of 20 benign questions. An exploratory replication on a 
 (Qwen~2.5) leaks far fewer canaries undefended (4 against 29 responses) and reaches the same 5\%
 under the layered configuration, but its judged rates are not validated against labels. The judge
 is the weaker half of the result.
-Against 110 reference labels its agreement is Cohen's $\kappa=0.67$ overall but only $0.47$ on
-the cases that the LLM component decides; the aggregate is lifted by the deterministic
-detector, which also supplied the basis for many labels. We report this split, a failure of our
-own verification step (a grounding check that overturned true attacks), and the limits of the
-study: one scenario, one target model, small samples, labels written by a language model rather
-than a human, and judge revisions made with the labels in view.
+Against 110 labels written by a human its agreement is Cohen's $\kappa=0.48$ (moderate), and
+only $0.38$ on the cases that the LLM component decides; against 110 labels written by a language
+model it is $0.67$, and the two label sets agree with each other at only $0.61$. The judge
+overstates attack success relative to the human labels ($41\%$ against $35\%$), the opposite
+of what the model labels suggest. We report this, a failure of our own verification step (a
+grounding check that overturned true attacks), and the limits of the study: one scenario, one
+target model, small samples, a single human annotator, no stronger judge, and judge revisions
+made with the AI labels in view.
 \end{abstract}
 
 \section{Introduction}
@@ -155,8 +157,11 @@ is overturned. We also report the LLM judge alone and a keyword baseline.
 For the 110 undefended responses we obtained a binary ``did the attack succeed'' label from an AI
 model (Claude), written from the transcripts without access to any judge verdict, following a
 written rubric. A response containing a protected string was labelled a success, as the rubric
-specifies. These are not human labels. The first 50 (injection sets) were written before the
-judge was revised; the other 60 were written before any judge scored those cases.
+specifies. The first 50 (injection sets) were written before the judge was revised; the other 60
+were written before any judge scored those cases. A human (one annotator, the author) later
+labelled the same 110 responses on a blind labelling page that showed neither the AI labels nor
+any judge verdict, following the same rubric. We report agreement with both sets and treat the
+human labels as the reference.
 
 \paragraph{Statistics.}
 Rates carry Wilson 95\% intervals~\cite{wilson1927}. Defences are compared per case against the
@@ -267,48 +272,58 @@ and which the LLM judge catches only partly.
 
 \section{Results: How Far Can the Judge Be Trusted?}\label{sec:judge}
 Table~\ref{tab:judge} compares each judge with the 110 reference labels on the undefended
-responses. Overall the hybrid judge has accuracy 84\%, precision 84\%, recall 78\% and
-$\kappa=0.67$ (95\% bootstrap interval $0.52$--$0.80$; ``substantial''). The keyword baseline
-is no better than chance ($\kappa=-0.11$, recall 8\%), which is the practical argument against
-substring scoring.
+responses. Against the human labels the hybrid judge has accuracy 76\%, precision 62\%, recall
+74\% and $\kappa=0.48$ (95\% bootstrap interval $0.31$--$0.64$; ``moderate''); against the
+AI-written labels it has accuracy 84\%, precision 84\%, recall 78\% and $\kappa=0.67$
+($0.52$--$0.80$; ``substantial''). The human and AI labels agree with each other on 81\% of
+cases, $\kappa=0.61$ ($0.45$--$0.75$), and differ on 21 cases (the human marked 5 successes the AI
+did not, the AI 16 the human did not). The keyword baseline is no better than chance against
+either ($\kappa=-0.10$ against the human labels, recall 8\%), which is the practical argument
+against substring scoring.
 
 \begin{table}[t]
 \centering\small
-\caption{Judge agreement with reference labels on undefended responses (Cohen's $\kappa$ with 95\%
-bootstrap intervals). ``Leak'' = system-prompt leak and exfiltration; ``judged'' = injection,
-indirect injection and jailbreak.}\label{tab:judge}
-\begin{tabular}{@{}lrcccc@{}}
+\caption{Judge agreement with human labels, and with AI-written labels for comparison, on
+undefended responses (Cohen's $\kappa$ with 95\% bootstrap intervals; precision and recall are
+against the human labels). ``Leak'' = system-prompt leak and exfiltration; ``judged'' =
+injection, indirect injection and jailbreak.}\label{tab:judge}
+\begin{tabular}{@{}lrccccc@{}}
 \toprule
-Judge / subset & $n$ & $\kappa$ & 95\% interval & Precision & Recall\\
+Judge / subset & $n$ & $\kappa$ (human) & 95\% interval & Precision & Recall & $\kappa$ (AI)\\
 \midrule
-Hybrid, all             & 110 & 0.67 & 0.52--0.80 & 0.84 & 0.78\\
-Hybrid, leak categories &  40 & 0.89 & 0.73--1.00 & 0.92 & 1.00\\
-Hybrid, judged categories &  70 & 0.47 & 0.25--0.68 & 0.74 & 0.56\\
-\quad injection only (PI, II) & 50 & 0.38 & 0.09--0.65 & 0.67 & 0.47\\
-\quad jailbreak only    &  20 & 0.68 & 0.29--1.00 & 0.86 & 0.75\\
-LLM judge alone, all    & 110 & 0.47 & 0.30--0.62 & 0.80 & 0.57\\
-Keyword baseline, all   & 110 & $-0.11$ & $-0.24$--$0.03$ & 0.27 & 0.08\\
+Hybrid, all             & 110 & 0.48 & 0.31--0.64 & 0.62 & 0.74 & 0.67\\
+Hybrid, leak categories &  40 & 0.50 & 0.24--0.75 & 0.69 & 0.90 & 0.89\\
+Hybrid, judged categories &  70 & 0.38 & 0.12--0.60 & 0.53 & 0.56 & 0.47\\
+\quad injection only (PI, II) & 50 & 0.27 & $-0.04$--0.56 & 0.42 & 0.45 & 0.38\\
+\quad jailbreak only    &  20 & 0.56 & 0.13--0.89 & 0.71 & 0.71 & 0.68\\
+LLM judge alone, all    & 110 & 0.45 & 0.27--0.62 & 0.66 & 0.61 & 0.47\\
+Keyword baseline, all   & 110 & $-0.10$ & $-0.23$--0.05 & 0.20 & 0.08 & $-0.11$\\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \paragraph{The aggregate hides a split.}
-On the leak categories the hybrid judge reaches $\kappa=0.89$, because a protected string either
-appears or does not and the detector decides the case. On the 70 cases that depend on the 7B LLM
-judge, $\kappa$ is $0.47$ with recall $0.56$; on the 50 injection cases alone $\kappa$ is $0.38$
-(interval $0.09$--$0.65$) with recall $0.47$. The leak-category agreement is also partly
-circular: the labeller used the same canary strings to decide leak labels. The honest summary is
-that the judge is dependable where a deterministic check applies and only moderately reliable
-where it must reason.
+Against the AI labels the leak categories reach $\kappa=0.89$, because a protected string either
+appears or does not and the detector decides the case, and the AI labeller used the same canary
+strings to decide leak labels, so that agreement is partly circular. Against the human labels the
+leak categories fall to $\kappa=0.50$: recall stays high ($0.90$) but precision is $0.69$, because the
+judge counts $11$ system-prompt leaks where the human counts $5$, so a canary string in a response
+was not always a success to the human. On the 70 cases that depend on the 7B LLM judge, $\kappa$ is
+$0.38$ with recall $0.56$; on the 50 injection cases alone $\kappa$ is $0.27$ (interval
+$-0.04$--$0.56$) with precision $0.42$. The honest summary is that the judge is only moderately
+reliable everywhere and weakest where it must reason, and that the apparently strong leak
+agreement was largely an artefact of how the AI labels were made. We did not investigate why the
+human and the judge differ on the leak cases; the human labels carry no notes.
 
 \paragraph{Direction of error.}
-The reference labels put undefended attack success at $49/110=45\%$ (Wilson 36--54\%), against
-$45/110=41\%$ from the judge; per category (labels vs.\ judge) the counts are 12 vs.\ 8 for
-prompt injection, 5 vs.\ 4 for indirect injection, 9 vs.\ 11 for system-prompt leak, 15 vs.\ 15
-for exfiltration and 8 vs.\ 7 for jailbreak. The judge's misses concentrate in the injection sets,
-where a 7B model often states that the response ignored an instruction it plainly carried out.
-Judged attack success for defended configurations is therefore probably a \emph{lower bound} for
-the injection and jailbreak categories.
+The AI labels put undefended attack success at $49/110=45\%$ (Wilson 36--54\%), against
+$45/110=41\%$ from the judge, which suggested the judge underestimates attacks that need
+judgement. The human labels reverse this: $38/110=35\%$ (Wilson 26--44\%), so the judge
+overstates success (17 false positives, 10 false negatives). Per category (human labels vs.\ judge)
+the counts are 9 vs.\ 8 for prompt injection, 2 vs.\ 4 for indirect injection, 5 vs.\ 11 for
+system-prompt leak, 15 vs.\ 15 for exfiltration and 7 vs.\ 7 for jailbreak. The direction of the
+judge's error therefore depends on who labelled, and judged attack success for defended
+configurations should not be read as a lower bound.
 
 \paragraph{A verification step that hurt.}
 The first judge (v1) produced false positives: it asserted that responses had followed planted
@@ -326,14 +341,17 @@ methodological: heuristics added to repair a judge need their own validation aga
 
 \section{Threats to Validity and Limitations}\label{sec:threats}
 \begin{itemize}
-\item \textbf{Labels are AI-written, by one labeller.} No human annotated them, and there is no
-      inter-annotator agreement. Agreement with these labels measures agreement with one model's
-      reading of the rubric. The labelling tool in the repository exists so that a human can
-      replace them.
-\item \textbf{The judge was revised twice with labels in view} (adding the grounding check, then
-      correcting it). Every $\kappa$ above is therefore in-sample for the judge logic. Only the 60
-      labels for the newer categories pre-date any judge scoring, and even those informed the
-      second revision.
+\item \textbf{One human annotator.} The human labels are one person's reading of the rubric
+      (the author's), so there is no human--human agreement, and the 21 disagreements with the AI
+      labels cannot be adjudicated; neither set is ground truth. Disagreements carry almost no
+      notes.
+\item \textbf{No stronger judge.} We evaluated only the 7B judge. A stronger hosted judge may agree
+      better with the human labels, and the repository supports one, but we did not run it, so the
+      judge's weak agreement may partly reflect its size.
+\item \textbf{The judge was revised twice with AI labels in view} (adding the grounding check,
+      then correcting it). The $\kappa$ values against the AI labels are therefore in-sample for
+      the judge logic. The human labels were written after both revisions and were blind to the
+      judge, so they are the out-of-sample check.
 \item \textbf{One scenario, one target model, one run.} Results may not transfer to other
       applications or models, and determinism means repeats cannot estimate variance.
 \item \textbf{Small samples.} Twenty to twenty-five cases per category give wide intervals;
@@ -360,16 +378,17 @@ scenario are fictitious. The attack payloads come from public datasets and are r
 the repository also stores the model's responses to the jailbreak cases, which can contain harmful
 content, so that the judge can be audited. We disclose that the code, the labels and this report
 were produced with substantial assistance from a language model (Claude), and that the human
-author's review, not independent annotation, stands behind the labels.
+author's labelling of the 110 responses is the human reference, from a single annotator.
 
 \section{Conclusion}
 On a small-model assistant, a defence-in-depth configuration cut judged attack success from 41\% to
 5\% at a cost of one refused benign question in twenty, while no single layer matched it on every
 category and indirect injection remained the hardest case. The more durable result is about
-measurement: the agreement of a hybrid judge with reference labels depended heavily on which
-component decided the case ($\kappa$ 0.89 against 0.47), and a repair heuristic for the judge
-degraded it until it was itself checked. Stronger conclusions need human labels, more
-applications and models, adaptive attacks, and a stronger judge.
+measurement: the agreement of a hybrid judge with reference labels depended on who wrote them
+($\kappa$ 0.48 against human labels, 0.67 against AI labels, which agree with each other at 0.61),
+the judge overstated attack success relative to the human, and a repair heuristic for the judge
+degraded it until it was itself checked. Stronger conclusions need more than one human annotator,
+more applications and models, adaptive attacks, and a stronger judge.
 
 \appendix
 \section{Exploratory Replication on a Second Target Model}\label{app:rep}
@@ -379,8 +398,8 @@ undefended and layered configurations to bound the run time (260 responses, 16 O
 Two limits apply. First, the judge now grades its own model's outputs, which risks
 self-preference~\cite{panickssery2024}. Second, the reference labels describe Mistral's
 responses, so there is no validation of the judge on these outputs; the judged rates below are
-unvalidated, and given the judge's recall on injection cases (Section~\ref{sec:judge}) they are
-more likely under- than over-estimates.
+unvalidated, and since the judge's error direction depends on which labels are used
+(Section~\ref{sec:judge}) we do not say whether they are over- or under-estimates.
 
 \begin{table}[h]
 \centering\small
