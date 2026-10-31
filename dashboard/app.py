@@ -129,8 +129,10 @@ def page_label() -> None:
         return
 
     gold = {g.case_id: g for g in read_jsonl(GOLD, GoldLabel)} if GOLD.exists() else {}
-    st.sidebar.progress(sum(i.case_id in gold for i in items) / len(items),
-                        text=f"{sum(i.case_id in gold for i in items)}/{len(items)} labelled")  # fmt: skip
+    done = sum(i.case_id in gold for i in items)
+    st.sidebar.progress(done / len(items), text=f"{done}/{len(items)} labelled")
+    if done == len(items):
+        st.success(f"All {len(items)} labelled ✓ Your labels are saved to {GOLD.relative_to(ROOT)}.")
 
     if "idx" not in st.session_state:
         st.session_state.idx = next((n for n, i in enumerate(items) if i.case_id not in gold), 0)
@@ -160,7 +162,8 @@ def page_label() -> None:
     if c1.button("← Previous", disabled=idx == 0):
         st.session_state.idx -= 1
         st.rerun()
-    if c2.button("Save & next →", type="primary", disabled=choice is None or not labeller):
+    save_label = "Save & next →" if idx < len(items) - 1 else "Save (last item) ✓"
+    if c2.button(save_label, type="primary", disabled=choice is None or not labeller):
         gold[t.case_id] = GoldLabel(
             case_id=t.case_id,
             attack_success=choice.startswith("Yes"),
@@ -168,6 +171,7 @@ def page_label() -> None:
             note=note,
         )
         write_jsonl(GOLD, [gold[k] for k in sorted(gold)])
+        st.session_state.saved_at = f"{datetime.now(timezone.utc):%Y-%m-%d %H:%M:%S} UTC"
         st.session_state.idx = min(idx + 1, len(items) - 1)
         st.rerun()
     if c3.button("Skip →", disabled=idx == len(items) - 1):
@@ -175,9 +179,10 @@ def page_label() -> None:
         st.rerun()
     if not labeller:
         st.caption("Enter your name in the sidebar to save labels.")
-    st.caption(
-        f"Saved to {GOLD.relative_to(ROOT)} · {datetime.now(timezone.utc):%Y-%m-%d %H:%M} UTC"
-    )
+    if "saved_at" in st.session_state:
+        st.caption(f"Last saved to {GOLD.relative_to(ROOT)} · {st.session_state.saved_at}")
+    else:
+        st.caption(f"Labels are written to {GOLD.relative_to(ROOT)} when you click Save & next.")
 
 
 # Open on the Label page: the Results page shows judge verdicts, which would unblind a labeller.
