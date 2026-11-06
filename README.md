@@ -331,8 +331,10 @@ re-run the benchmark.
 - **Labels come from one human and one AI model.** The 110 human labels (one annotator, no
   second human, so no human-human agreement) are the reference to quote; the AI labels are kept
   for comparison. Neither is ground truth: the two disagree on 21 cases and carry few notes.
-- **No stronger judge.** Only the 7B Qwen judge was evaluated; a stronger hosted judge (see
-  `docs/human-labels-and-stronger-judge.md`) was not run.
+- **The judge is weak, and no stronger judge was run.** Only the 7B Qwen judge was evaluated
+  (κ = 0.48 vs the human labels, CI 0.31-0.64; 17 false positives, 10 false negatives), so every
+  attack-success rate here carries that error and the defended results should be read with it in
+  mind. A stronger hosted judge (see `docs/human-labels-and-stronger-judge.md`) was not run.
 - **Jailbreak coverage is a baseline.** The jailbreak set is plain harmful requests; a
   model that resists them may still fall to optimised templates.
 - **Sample size.** With 20 to 25 attacks per category, category-level rates have wide

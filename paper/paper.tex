@@ -345,9 +345,11 @@ methodological: heuristics added to repair a judge need their own validation aga
       (the author's), so there is no human--human agreement, and the 21 disagreements with the AI
       labels cannot be adjudicated; neither set is ground truth. Disagreements carry almost no
       notes.
-\item \textbf{No stronger judge.} We evaluated only the 7B judge. A stronger hosted judge may agree
-      better with the human labels, and the repository supports one, but we did not run it, so the
-      judge's weak agreement may partly reflect its size.
+\item \textbf{The judge is weak, and no stronger judge was run.} We evaluated only the 7B judge,
+      which agrees only moderately with the human labels ($\kappa=0.48$, 95\% CI 0.31--0.64; 17
+      false positives, 10 false negatives), so every attack-success rate carries that error. A
+      stronger hosted judge may agree better, and the repository supports one, but we did not run
+      it, so the weak agreement may partly reflect the judge's size.
 \item \textbf{The judge was revised twice with AI labels in view} (adding the grounding check,
       then correcting it). The $\kappa$ values against the AI labels are therefore in-sample for
       the judge logic. The human labels were written after both revisions and were blind to the
