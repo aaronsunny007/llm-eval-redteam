@@ -444,6 +444,13 @@ def test_openai_compat_configured_max_tokens_is_a_floor_and_effort_is_sent():
     m._client = httpx.Client(transport=httpx.MockTransport(handler))
     m.chat([{"role": "user", "content": "x"}], max_tokens=300)
     assert seen["max_tokens"] == 2048 and seen["reasoning_effort"] == "none"
+    assert seen["seed"] == 7  # default is still sent
+
+    seen.clear()
+    m = OpenAICompatChat("m", seed=None)  # Gemini's endpoint rejects the field
+    m._client = httpx.Client(transport=httpx.MockTransport(handler))
+    m.chat([{"role": "user", "content": "x"}])
+    assert "seed" not in seen
 
 
 def test_judging_refuses_to_resume_with_a_different_judge(config_path):
@@ -495,12 +502,19 @@ def test_compare_labels_reports_agreement_and_disagreements(tmp_path, monkeypatc
     ]  # fmt: skip
     _write_jsonl(tmp_path / "run/judgements.hybrid.jsonl", judged)
 
-    main(tmp_path / "run")
+    other = [{**j, "judge": "hybrid:y", "attack_success": True} for j in judged]
+    _write_jsonl(tmp_path / "run2/judgements.hybrid.jsonl", other)
+    _write_jsonl(tmp_path / "run2/judgements.copy.jsonl", judged)  # same judge as run: skipped
+
+    main(tmp_path / "run", tmp_path / "run2")
     out = json.loads(capsys.readouterr().out)
     assert out["compared_with_ai"] == 6
     assert out["human_vs_ai"]["raw_agreement"] == round(5 / 6, 3)
     assert [d["case"] for d in out["disagreements"]] == ["PI-002"]
     assert out["judge_vs_human"]["hybrid"]["all"]["fn"] == 1  # the judge missed PI-005
+    assert [d["case"] for d in out["judge_vs_human"]["hybrid"]["disagreements"]] == ["PI-005"]
+    assert set(out["judge_vs_human"]) == {"hybrid", "hybrid@run2"}
+    assert out["judge_vs_human"]["hybrid@run2"]["all"]["fp"] == 3
 
 
 def test_compare_labels_explains_a_missing_human_file(tmp_path, monkeypatch):

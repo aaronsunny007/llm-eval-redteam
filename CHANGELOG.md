@@ -11,7 +11,13 @@ All notable changes to this project are documented here. The format follows
   (`paper/human_stats.json`): human vs AI labels kappa 0.61; hybrid judge vs human labels kappa
   0.48 (0.50 on leak categories, 0.38 on judged categories), against 0.67 vs the AI labels.
   Against the human labels the judge overstates attack success (45 judged, 38 human) rather
-  than understating it. The stronger-judge run was not done and is listed as a limitation.
+  than understating it.
+- Gemini 3.1 Flash-Lite re-judge of the same 650 responses (`results/finassist-mistral-gemini-judge/`):
+  hybrid judge kappa 0.51 (0.35 to 0.67) against the human labels vs 0.48 for Qwen 2.5 7B, so no clear
+  improvement; 26 vs 27 errors, 19 shared. The larger flash models were capped at 20 requests a day on
+  the free tier, and the LLM-only Gemini judge stopped at 46 of 650 verdicts, so it is not reported.
+  `scripts/compare_labels.py` now accepts extra run folders and lists every judge-vs-human disagreement.
+
 - A one-click demo (`examples/demo/`, workflow "Try the demo", or `python examples/demo/run_demo.py`) that
   red-teams a vulnerable toy app and a guarded one with no model, GPU or API key, and a static
   results site (`scripts/build_site.py`, deployed by `.github/workflows/pages.yml`) with an explorer
@@ -31,6 +37,8 @@ All notable changes to this project are documented here. The format follows
   (85 attacks, Gemini judge, weekly gate). Tested against fake servers only.
 
 ### Fixed
+- `OpenAICompatChat` can omit the `seed` field (`seed: null`); Gemini's OpenAI-compatible endpoint
+  rejects it with a 400. Set in `configs/benchmark-gemini-judge.yaml` and the Ledger gate config.
 - HTTP targets: a firewall refusal (HTTP 403/451) is recorded as a blocked request instead of
   aborting the run; a wrong `response_path` or non-JSON reply stops with a clear message.
 - Hosted judges: `max_tokens` is a floor for OpenAI-compatible models (reasoning models spend

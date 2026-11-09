@@ -23,6 +23,7 @@ judge:
     model: gemini-2.5-flash
     base_url: https://generativelanguage.googleapis.com/v1beta/openai
     api_key_env: GEMINI_API_KEY
+    seed: null          # Gemini's OpenAI endpoint rejects the `seed` field
     max_tokens: 400
 defences: [none]
 output_dir: redteam-results

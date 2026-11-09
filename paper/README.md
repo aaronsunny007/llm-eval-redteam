@@ -16,7 +16,7 @@ and the text were produced with substantial AI assistance, which the paper discl
 ## Posting to arXiv
 
 `arxiv-submission.zip` holds what arXiv compiles from (`paper.tex`, `paper.bbl`, `references.bib`);
-it was test-compiled from a clean folder (9 pages, no undefined references). arXiv needs the
+it was test-compiled from a clean folder (10 pages, no undefined references). arXiv needs the
 author's own account, so this step cannot be automated:
 
 1. Register at <https://arxiv.org/user/register> with an institutional or long-standing email.

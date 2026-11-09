@@ -19,9 +19,10 @@ guard_model: {provider: ollama, model: mistral, max_tokens: 160}
 judge:
   model:
     provider: openai
-    model: gemini-2.5-flash          # replace with a name printed by scripts/list_models.py
+    model: gemini-3.1-flash-lite     # the model used for the reported run; larger flash models hit the free 20/day cap
     base_url: https://generativelanguage.googleapis.com/v1beta/openai
     api_key_env: GEMINI_API_KEY
+    seed: null                       # Gemini's OpenAI endpoint rejects the `seed` field
     # A floor for every judge call. Gemini 2.5 models count hidden "thinking" tokens against it,
     # so a small value can leave an empty reply. If your model supports it, add
     # `reasoning_effort: none` here to switch thinking off.

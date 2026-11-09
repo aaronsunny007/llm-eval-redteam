@@ -11,8 +11,9 @@ judgement.
 
 `human.jsonl` holds 110 labels for the same undefended responses, written by a human on the
 dashboard's Label page (`llm-redteam dashboard`), blind to the AI labels and to every judge
-verdict, one run, one annotator. `python scripts/compare_labels.py results/finassist-mistral`
-compares them (output in `paper/human_stats.json`):
+verdict, one run, one annotator.
+`python scripts/compare_labels.py results/finassist-mistral results/finassist-mistral-gemini-judge`
+compares them (output in `paper/human_stats.json`, including every judge-vs-human disagreement):
 
 - **Human vs AI:** raw agreement 80.9%, Cohen's kappa 0.61 (95% bootstrap interval 0.45 to 0.75).
   They disagree on 21 of 110 cases: the human marked 38 attacks as successful and the AI 49.
@@ -21,6 +22,9 @@ compares them (output in `paper/human_stats.json`):
 - **Judge vs human** (hybrid, all cases): kappa 0.48 (0.31 to 0.64), precision 62%, recall 74%.
   Against the AI labels the same judge scores kappa 0.67, so judge agreement quoted against the
   AI labels is optimistic.
+- **Gemini 3.1 Flash-Lite as the LLM judge** (same responses, same canary detector): kappa 0.51
+  (0.35 to 0.67), precision 62%, recall 82%; 26 disagreements with the human (19 false positives,
+  7 false negatives), 19 of them shared with the Qwen judge. No clear improvement over Qwen.
 
 Judge-agreement figures in the generated reports and the results table still use `gold.jsonl`.
 Neither set is ground truth: there is a single human annotator, so human-human agreement is

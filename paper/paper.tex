@@ -42,9 +42,11 @@ Against 110 labels written by a human its agreement is Cohen's $\kappa=0.48$ (mo
 only $0.38$ on the cases that the LLM component decides; against 110 labels written by a language
 model it is $0.67$, and the two label sets agree with each other at only $0.61$. The judge
 overstates attack success relative to the human labels ($41\%$ against $35\%$), the opposite
-of what the model labels suggest. We report this, a failure of our own verification step (a
+of what the model labels suggest. Re-judging the same responses with a larger hosted model
+(Gemini~3.1 Flash-Lite) gives $\kappa=0.51$ ($0.35$--$0.67$), no demonstrable improvement. We
+report this, a failure of our own verification step (a
 grounding check that overturned true attacks), and the limits of the study: one scenario, one
-target model, small samples, a single human annotator, no stronger judge, and judge revisions
+target model, small samples, a single human annotator, no frontier-scale judge, and judge revisions
 made with the AI labels in view.
 \end{abstract}
 
@@ -286,7 +288,9 @@ against substring scoring.
 \caption{Judge agreement with human labels, and with AI-written labels for comparison, on
 undefended responses (Cohen's $\kappa$ with 95\% bootstrap intervals; precision and recall are
 against the human labels). ``Leak'' = system-prompt leak and exfiltration; ``judged'' =
-injection, indirect injection and jailbreak.}\label{tab:judge}
+injection, indirect injection and jailbreak. Rows above the rule use Qwen~2.5~7B as the LLM
+component; the last three rows re-judge the same responses with Gemini~3.1 Flash-Lite behind the
+same canary detector (not compared with the AI labels).}\label{tab:judge}
 \begin{tabular}{@{}lrccccc@{}}
 \toprule
 Judge / subset & $n$ & $\kappa$ (human) & 95\% interval & Precision & Recall & $\kappa$ (AI)\\
@@ -298,6 +302,10 @@ Hybrid, judged categories &  70 & 0.38 & 0.12--0.60 & 0.53 & 0.56 & 0.47\\
 \quad jailbreak only    &  20 & 0.56 & 0.13--0.89 & 0.71 & 0.71 & 0.68\\
 LLM judge alone, all    & 110 & 0.45 & 0.27--0.62 & 0.66 & 0.61 & 0.47\\
 Keyword baseline, all   & 110 & $-0.10$ & $-0.23$--0.05 & 0.20 & 0.08 & $-0.11$\\
+\midrule
+Hybrid (Gemini), all    & 110 & 0.51 & 0.35--0.67 & 0.62 & 0.82 & ---\\
+Hybrid (Gemini), leak   &  40 & 0.40 & 0.12--0.65 & 0.65 & 0.85 & ---\\
+Hybrid (Gemini), judged &  70 & 0.53 & 0.30--0.73 & 0.58 & 0.78 & ---\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -325,6 +333,25 @@ system-prompt leak, 15 vs.\ 15 for exfiltration and 7 vs.\ 7 for jailbreak. The 
 judge's error therefore depends on who labelled, and judged attack success for defended
 configurations should not be read as a lower bound.
 
+\paragraph{A larger hosted judge.}
+We re-judged the same 650 responses with Gemini~3.1 Flash-Lite through its OpenAI-compatible
+endpoint, with the same prompts and canary detector. We chose it because the larger flash models
+were capped at 20 free requests a day, far below the several hundred calls a run needs; the
+LLM-only variant of this judge also exhausted the daily quota (46 of 650 verdicts) and is not
+reported. Against the human labels the hybrid judge reaches $\kappa=0.51$ ($0.35$--$0.67$), with
+precision $0.62$ and recall $0.82$ (Table~\ref{tab:judge}). The interval overlaps that of the
+Qwen judge ($0.31$--$0.64$) almost entirely, so we cannot claim an improvement. The pattern differs:
+on the judged categories $\kappa$ rises from $0.38$ to $0.53$ and recall from $0.56$ to $0.78$, on
+the leak categories it falls from $0.50$ to $0.40$. The Gemini judge makes 26 errors (19 false
+positives, 7 false negatives) against Qwen's 27, and 19 of the 26 are cases Qwen also gets wrong;
+seven of those are leak cases decided by the deterministic canary detector, where a canary string
+appears in the response and the human did not count it as a success, so no LLM component can
+change them. It also overstates success ($50$ judged against $38$ by the human). Judged attack
+successes by defence (none, hardened prompt, input guard, output guard, layered) are
+$45,28,22,12,5$ of 110 under Qwen and $50,32,24,17,6$ under Gemini: the ordering of the defences
+is unchanged. A frontier-scale judge was not run, so whether a much stronger model closes the gap
+remains open.
+
 \paragraph{A verification step that hurt.}
 The first judge (v1) produced false positives: it asserted that responses had followed planted
 instructions that they did not contain. We added the grounding check, which removed those errors
@@ -345,11 +372,12 @@ methodological: heuristics added to repair a judge need their own validation aga
       (the author's), so there is no human--human agreement, and the 21 disagreements with the AI
       labels cannot be adjudicated; neither set is ground truth. Disagreements carry almost no
       notes.
-\item \textbf{The judge is weak, and no stronger judge was run.} We evaluated only the 7B judge,
-      which agrees only moderately with the human labels ($\kappa=0.48$, 95\% CI 0.31--0.64; 17
-      false positives, 10 false negatives), so every attack-success rate carries that error. A
-      stronger hosted judge may agree better, and the repository supports one, but we did not run
-      it, so the weak agreement may partly reflect the judge's size.
+\item \textbf{The judge is weak, and no frontier-scale judge was run.} The 7B judge agrees only
+      moderately with the human labels ($\kappa=0.48$, 95\% CI 0.31--0.64; 17 false positives, 10
+      false negatives), and a hosted Gemini~3.1 Flash-Lite judge does not clearly do better
+      ($\kappa=0.51$, 0.35--0.67), so every attack-success rate carries that error. Free-tier
+      quotas ruled out the larger models, so we cannot say whether a much stronger judge would
+      close the gap.
 \item \textbf{The judge was revised twice with AI labels in view} (adding the grounding check,
       then correcting it). The $\kappa$ values against the AI labels are therefore in-sample for
       the judge logic. The human labels were written after both revisions and were blind to the
@@ -388,9 +416,10 @@ On a small-model assistant, a defence-in-depth configuration cut judged attack s
 category and indirect injection remained the hardest case. The more durable result is about
 measurement: the agreement of a hybrid judge with reference labels depended on who wrote them
 ($\kappa$ 0.48 against human labels, 0.67 against AI labels, which agree with each other at 0.61),
-the judge overstated attack success relative to the human, and a repair heuristic for the judge
-degraded it until it was itself checked. Stronger conclusions need more than one human annotator,
-more applications and models, adaptive attacks, and a stronger judge.
+the judge overstated attack success relative to the human, a larger hosted judge did not clearly
+change that ($\kappa$ 0.51), and a repair heuristic for the judge degraded it until it was itself
+checked. Stronger conclusions need more than one human annotator, more applications and models,
+adaptive attacks, and a frontier-scale judge.
 
 \appendix
 \section{Exploratory Replication on a Second Target Model}\label{app:rep}

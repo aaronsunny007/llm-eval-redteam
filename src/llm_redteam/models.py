@@ -116,7 +116,7 @@ class OpenAICompatChat(ChatModel):
         base_url: str = "https://api.openai.com/v1",
         api_key_env: str = "OPENAI_API_KEY",
         temperature: float = 0.0,
-        seed: int = 7,
+        seed: int | None = 7,  # None omits it: Gemini's OpenAI endpoint rejects the field
         max_tokens: int = 400,
         timeout: float = 300.0,
         reasoning_effort: str | None = None,
@@ -134,11 +134,12 @@ class OpenAICompatChat(ChatModel):
             "model": self.model,
             "messages": messages,
             "temperature": self.temperature,
-            "seed": self.seed,
             # Hosted reasoning models count hidden thinking tokens against this limit, so the
             # configured value is a floor: a smaller per-call cap could leave an empty reply.
             "max_tokens": max(max_tokens or 0, self.max_tokens),
         }
+        if self.seed is not None:
+            body["seed"] = self.seed
         if self.reasoning_effort:
             body["reasoning_effort"] = self.reasoning_effort
         if json_schema is not None:
