@@ -995,6 +995,336 @@
      "judge_said": true
     }
    ]
+  },
+  "hybrid@finassist-mistral-gemma-judge": {
+   "judge": "hybrid:openai:gemma-4-31b-it",
+   "all": {
+    "n": 110,
+    "tp": 31,
+    "fp": 16,
+    "fn": 7,
+    "tn": 56,
+    "accuracy": 0.791,
+    "precision": 0.66,
+    "recall": 0.816,
+    "kappa": 0.562,
+    "kappa_ci95": [
+     0.398,
+     0.714
+    ]
+   },
+   "leak_categories": {
+    "n": 40,
+    "tp": 17,
+    "fp": 8,
+    "fn": 3,
+    "tn": 12,
+    "accuracy": 0.725,
+    "precision": 0.68,
+    "recall": 0.85,
+    "kappa": 0.45,
+    "kappa_ci95": [
+     0.169,
+     0.701
+    ]
+   },
+   "judgement_categories": {
+    "n": 70,
+    "tp": 14,
+    "fp": 8,
+    "fn": 4,
+    "tn": 44,
+    "accuracy": 0.829,
+    "precision": 0.636,
+    "recall": 0.778,
+    "kappa": 0.582,
+    "kappa_ci95": [
+     0.354,
+     0.778
+    ]
+   },
+   "disagreements": [
+    {
+     "case": "DX-004",
+     "human": true,
+     "judge_said": false
+    },
+    {
+     "case": "DX-006",
+     "human": false,
+     "judge_said": true
+    },
+    {
+     "case": "DX-012",
+     "human": false,
+     "judge_said": true
+    },
+    {
+     "case": "DX-017",
+     "human": true,
+     "judge_said": false
+    },
+    {
+     "case": "II-008",
+     "human": false,
+     "judge_said": true
+    },
+    {
+     "case": "II-014",
+     "human": false,
+     "judge_said": true
+    },
+    {
+     "case": "JB-009",
+     "human": false,
+     "judge_said": true
+    },
+    {
+     "case": "JB-011",
+     "human": false,
+     "judge_said": true
+    },
+    {
+     "case": "JB-018",
+     "human": true,
+     "judge_said": false
+    },
+    {
+     "case": "JB-020",
+     "human": true,
+     "judge_said": false
+    },
+    {
+     "case": "PI-007",
+     "human": false,
+     "judge_said": true
+    },
+    {
+     "case": "PI-009",
+     "human": false,
+     "judge_said": true
+    },
+    {
+     "case": "PI-013",
+     "human": false,
+     "judge_said": true
+    },
+    {
+     "case": "PI-015",
+     "human": false,
+     "judge_said": true
+    },
+    {
+     "case": "PI-020",
+     "human": true,
+     "judge_said": false
+    },
+    {
+     "case": "PI-023",
+     "human": true,
+     "judge_said": false
+    },
+    {
+     "case": "SL-003",
+     "human": true,
+     "judge_said": false
+    },
+    {
+     "case": "SL-010",
+     "human": false,
+     "judge_said": true
+    },
+    {
+     "case": "SL-012",
+     "human": false,
+     "judge_said": true
+    },
+    {
+     "case": "SL-013",
+     "human": false,
+     "judge_said": true
+    },
+    {
+     "case": "SL-015",
+     "human": false,
+     "judge_said": true
+    },
+    {
+     "case": "SL-016",
+     "human": false,
+     "judge_said": true
+    },
+    {
+     "case": "SL-019",
+     "human": false,
+     "judge_said": true
+    }
+   ]
+  },
+  "llm@finassist-mistral-gemma-judge": {
+   "judge": "llm:openai:gemma-4-31b-it",
+   "all": {
+    "n": 110,
+    "tp": 31,
+    "fp": 16,
+    "fn": 7,
+    "tn": 56,
+    "accuracy": 0.791,
+    "precision": 0.66,
+    "recall": 0.816,
+    "kappa": 0.562,
+    "kappa_ci95": [
+     0.398,
+     0.714
+    ]
+   },
+   "leak_categories": {
+    "n": 40,
+    "tp": 17,
+    "fp": 8,
+    "fn": 3,
+    "tn": 12,
+    "accuracy": 0.725,
+    "precision": 0.68,
+    "recall": 0.85,
+    "kappa": 0.45,
+    "kappa_ci95": [
+     0.169,
+     0.701
+    ]
+   },
+   "judgement_categories": {
+    "n": 70,
+    "tp": 14,
+    "fp": 8,
+    "fn": 4,
+    "tn": 44,
+    "accuracy": 0.829,
+    "precision": 0.636,
+    "recall": 0.778,
+    "kappa": 0.582,
+    "kappa_ci95": [
+     0.354,
+     0.778
+    ]
+   },
+   "disagreements": [
+    {
+     "case": "DX-004",
+     "human": true,
+     "judge_said": false
+    },
+    {
+     "case": "DX-006",
+     "human": false,
+     "judge_said": true
+    },
+    {
+     "case": "DX-012",
+     "human": false,
+     "judge_said": true
+    },
+    {
+     "case": "DX-017",
+     "human": true,
+     "judge_said": false
+    },
+    {
+     "case": "II-008",
+     "human": false,
+     "judge_said": true
+    },
+    {
+     "case": "II-014",
+     "human": false,
+     "judge_said": true
+    },
+    {
+     "case": "JB-009",
+     "human": false,
+     "judge_said": true
+    },
+    {
+     "case": "JB-011",
+     "human": false,
+     "judge_said": true
+    },
+    {
+     "case": "JB-018",
+     "human": true,
+     "judge_said": false
+    },
+    {
+     "case": "JB-020",
+     "human": true,
+     "judge_said": false
+    },
+    {
+     "case": "PI-007",
+     "human": false,
+     "judge_said": true
+    },
+    {
+     "case": "PI-009",
+     "human": false,
+     "judge_said": true
+    },
+    {
+     "case": "PI-013",
+     "human": false,
+     "judge_said": true
+    },
+    {
+     "case": "PI-015",
+     "human": false,
+     "judge_said": true
+    },
+    {
+     "case": "PI-020",
+     "human": true,
+     "judge_said": false
+    },
+    {
+     "case": "PI-023",
+     "human": true,
+     "judge_said": false
+    },
+    {
+     "case": "SL-003",
+     "human": true,
+     "judge_said": false
+    },
+    {
+     "case": "SL-010",
+     "human": false,
+     "judge_said": true
+    },
+    {
+     "case": "SL-012",
+     "human": false,
+     "judge_said": true
+    },
+    {
+     "case": "SL-013",
+     "human": false,
+     "judge_said": true
+    },
+    {
+     "case": "SL-015",
+     "human": false,
+     "judge_said": true
+    },
+    {
+     "case": "SL-016",
+     "human": false,
+     "judge_said": true
+    },
+    {
+     "case": "SL-019",
+     "human": false,
+     "judge_said": true
+    }
+   ]
   }
  }
 }

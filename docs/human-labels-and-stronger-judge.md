@@ -60,7 +60,8 @@ much better, and judging uses the *existing* responses, so nothing is regenerate
    Choose a current "flash" model from the list (a larger one is better if your quota allows).
    Check the quota first: in 2026-11 the larger flash models allowed only 20 free requests a day
    (a full run needs hundreds), while `gemini-3.1-flash-lite` allowed 500, which was enough for
-   the hybrid judge but not the LLM-only judge.
+   the hybrid judge but not the LLM-only judge. The open model `gemma-4-31b-it` was also free on
+   the same key and completed the full run (it was resumed once after a transient server error).
 4. **Re-judge.**
 
    ```powershell

@@ -154,9 +154,14 @@ The table above uses the AI labels. Judge agreement with the 110 **human** label
 | `hybrid`, Gemini 3.1 Flash-Lite | all | 110 | 62% | 82% | 0.51 [0.35, 0.67] (moderate) |
 | `hybrid`, Gemini 3.1 Flash-Lite | leak categories | 40 | 65% | 85% | 0.40 [0.12, 0.65] |
 | `hybrid`, Gemini 3.1 Flash-Lite | judged categories | 70 | 58% | 78% | 0.53 [0.30, 0.73] |
+| `hybrid`, Gemma 4 31B | all | 110 | 66% | 82% | 0.56 [0.40, 0.71] (moderate) |
+| `hybrid`, Gemma 4 31B | leak categories | 40 | 68% | 85% | 0.45 [0.17, 0.70] |
+| `hybrid`, Gemma 4 31B | judged categories | 70 | 64% | 78% | 0.58 [0.35, 0.78] |
 
-The first five rows use Qwen 2.5 7B as the LLM judge; the last three re-judge the same responses
-with Gemini 3.1 Flash-Lite behind the same canary detector (`configs/benchmark-gemini-judge.yaml`).
+The first five rows use Qwen 2.5 7B as the LLM judge; the next three re-judge the same responses
+with Gemini 3.1 Flash-Lite behind the same canary detector (`configs/benchmark-gemini-judge.yaml`),
+and the last three with Gemma 4 31B (`gemma-4-31b-it`, same config, free tier). The LLM-only Gemma
+judge scores exactly the same as the hybrid one on these 110 cases.
 
 Human vs AI labels: raw agreement 81%, κ = 0.61 [0.45, 0.75]; they disagree on 21 of 110 cases
 (the human marked 38 as attacks that succeeded, the AI 49). Full numbers are in
@@ -210,8 +215,12 @@ and guard model, Qwen 2.5 7B as judge, temperature 0, one run.
   response contains a canary string and the human did not count it as a success), which no LLM
   judge can change. It also overstates success: 50 judged successes against 38 by the human.
   Defended results move little (layered 6/110 vs 5/110 successes; the ordering of the defences
-  is identical), but the judge is still a source of error, not ground truth. A truly strong
-  judge (a frontier model) was **not run**; every disagreement is listed in
+  is identical), but the judge is still a source of error, not ground truth. Gemma 4 31B, also
+  free, is the best of the three on point estimates: κ = 0.56 [0.40, 0.71], 23 errors (16 false
+  positives, 7 false negatives), all 23 shared with the Gemini judge and 18 with Qwen. Its
+  interval still overlaps Qwen's, so this is a modest, not demonstrated, gain; it too overstates
+  success (47 judged against 38), and the ordering of the defences is unchanged (47, 27, 24, 16,
+  4 of 110). A truly strong judge (a frontier model) was **not run**; every disagreement is listed in
   [`paper/human_stats.json`](paper/human_stats.json).
 - **What was and wasn't held out.** The judge was changed twice after labels were seen:
   once to add the evidence-quoting check, and once to stop that check overturning true
@@ -349,7 +358,8 @@ re-run the benchmark.
   for comparison. Neither is ground truth: the two disagree on 21 cases and carry few notes.
 - **The judge is weak, and no frontier-scale judge was run.** The 7B Qwen judge agrees with the
   human labels at κ = 0.48 (CI 0.31-0.64; 17 false positives, 10 false negatives); Gemini 3.1
-  Flash-Lite reaches κ = 0.51 (CI 0.35-0.67), no demonstrable improvement. Every attack-success
+  Flash-Lite reaches κ = 0.51 (CI 0.35-0.67) and Gemma 4 31B κ = 0.56 (CI 0.40-0.71), no
+  demonstrable improvement. Every attack-success
   rate here carries that error, so read the defended results with it in mind. A larger model
   (see `docs/human-labels-and-stronger-judge.md`) could not be run on the free tier: the
   LLM-only Gemini judge also stopped at 46 of 650 verdicts on the daily quota and is not reported.

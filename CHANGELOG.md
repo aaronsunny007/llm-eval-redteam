@@ -17,6 +17,11 @@ All notable changes to this project are documented here. The format follows
   improvement; 26 vs 27 errors, 19 shared. The larger flash models were capped at 20 requests a day on
   the free tier, and the LLM-only Gemini judge stopped at 46 of 650 verdicts, so it is not reported.
   `scripts/compare_labels.py` now accepts extra run folders and lists every judge-vs-human disagreement.
+- Gemma 4 31B (`gemma-4-31b-it`, free tier) re-judge of the same 650 responses
+  (`results/finassist-mistral-gemma-judge/`): hybrid judge kappa 0.56 (0.40 to 0.71) against the
+  human labels, 23 errors (16 false positives, 7 false negatives), all shared with the Gemini judge.
+  Highest point estimate of the three judges but the intervals overlap, so no demonstrated gain;
+  the defence ordering is unchanged. The run needed one resume after a transient Google 500.
 
 - A one-click demo (`examples/demo/`, workflow "Try the demo", or `python examples/demo/run_demo.py`) that
   red-teams a vulnerable toy app and a guarded one with no model, GPU or API key, and a static

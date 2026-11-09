@@ -12,7 +12,7 @@ judgement.
 `human.jsonl` holds 110 labels for the same undefended responses, written by a human on the
 dashboard's Label page (`llm-redteam dashboard`), blind to the AI labels and to every judge
 verdict, one run, one annotator.
-`python scripts/compare_labels.py results/finassist-mistral results/finassist-mistral-gemini-judge`
+`python scripts/compare_labels.py results/finassist-mistral results/finassist-mistral-gemini-judge results/finassist-mistral-gemma-judge`
 compares them (output in `paper/human_stats.json`, including every judge-vs-human disagreement):
 
 - **Human vs AI:** raw agreement 80.9%, Cohen's kappa 0.61 (95% bootstrap interval 0.45 to 0.75).
@@ -25,6 +25,11 @@ compares them (output in `paper/human_stats.json`, including every judge-vs-huma
 - **Gemini 3.1 Flash-Lite as the LLM judge** (same responses, same canary detector): kappa 0.51
   (0.35 to 0.67), precision 62%, recall 82%; 26 disagreements with the human (19 false positives,
   7 false negatives), 19 of them shared with the Qwen judge. No clear improvement over Qwen.
+- **Gemma 4 31B as the LLM judge** (free tier, same responses and detector): kappa 0.56
+  (0.40 to 0.71), precision 66%, recall 82%; 23 disagreements (16 false positives, 7 false
+  negatives), all shared with the Gemini judge and 18 with Qwen. The best point estimate of the
+  three, but the intervals overlap, so not a demonstrated gain. The LLM-only Gemma judge gives
+  identical figures on these 110 cases.
 
 Judge-agreement figures in the generated reports and the results table still use `gold.jsonl`.
 Neither set is ground truth: there is a single human annotator, so human-human agreement is

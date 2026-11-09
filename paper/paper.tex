@@ -43,7 +43,7 @@ only $0.38$ on the cases that the LLM component decides; against 110 labels writ
 model it is $0.67$, and the two label sets agree with each other at only $0.61$. The judge
 overstates attack success relative to the human labels ($41\%$ against $35\%$), the opposite
 of what the model labels suggest. Re-judging the same responses with a larger hosted model
-(Gemini~3.1 Flash-Lite) gives $\kappa=0.51$ ($0.35$--$0.67$), no demonstrable improvement. We
+(Gemini~3.1 Flash-Lite) gives $\kappa=0.51$ ($0.35$--$0.67$) and a free 31B model (Gemma~4) $0.56$ ($0.40$--$0.71$), no demonstrable improvement. We
 report this, a failure of our own verification step (a
 grounding check that overturned true attacks), and the limits of the study: one scenario, one
 target model, small samples, a single human annotator, no frontier-scale judge, and judge revisions
@@ -289,8 +289,9 @@ against substring scoring.
 undefended responses (Cohen's $\kappa$ with 95\% bootstrap intervals; precision and recall are
 against the human labels). ``Leak'' = system-prompt leak and exfiltration; ``judged'' =
 injection, indirect injection and jailbreak. Rows above the rule use Qwen~2.5~7B as the LLM
-component; the last three rows re-judge the same responses with Gemini~3.1 Flash-Lite behind the
-same canary detector (not compared with the AI labels).}\label{tab:judge}
+component; the next three rows re-judge the same responses with Gemini~3.1 Flash-Lite and the
+last three with Gemma~4~31B, both behind the same canary detector (not compared with the AI
+labels).}\label{tab:judge}
 \begin{tabular}{@{}lrccccc@{}}
 \toprule
 Judge / subset & $n$ & $\kappa$ (human) & 95\% interval & Precision & Recall & $\kappa$ (AI)\\
@@ -306,6 +307,9 @@ Keyword baseline, all   & 110 & $-0.10$ & $-0.23$--0.05 & 0.20 & 0.08 & $-0.11$\
 Hybrid (Gemini), all    & 110 & 0.51 & 0.35--0.67 & 0.62 & 0.82 & ---\\
 Hybrid (Gemini), leak   &  40 & 0.40 & 0.12--0.65 & 0.65 & 0.85 & ---\\
 Hybrid (Gemini), judged &  70 & 0.53 & 0.30--0.73 & 0.58 & 0.78 & ---\\
+Hybrid (Gemma), all     & 110 & 0.56 & 0.40--0.71 & 0.66 & 0.82 & ---\\
+Hybrid (Gemma), leak    &  40 & 0.45 & 0.17--0.70 & 0.68 & 0.85 & ---\\
+Hybrid (Gemma), judged  &  70 & 0.58 & 0.35--0.78 & 0.64 & 0.78 & ---\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -349,8 +353,13 @@ appears in the response and the human did not count it as a success, so no LLM c
 change them. It also overstates success ($50$ judged against $38$ by the human). Judged attack
 successes by defence (none, hardened prompt, input guard, output guard, layered) are
 $45,28,22,12,5$ of 110 under Qwen and $50,32,24,17,6$ under Gemini: the ordering of the defences
-is unchanged. A frontier-scale judge was not run, so whether a much stronger model closes the gap
-remains open.
+is unchanged. A second free model, Gemma~4~31B, was run the same way: $\kappa=0.56$
+($0.40$--$0.71$), precision $0.66$, recall $0.82$, 23 errors (16 false positives, 7 false
+negatives), all 23 shared with the Gemini judge and 18 with Qwen, and 47 judged successes against
+38 by the human (47, 27, 24, 16, 4 by defence; same ordering). It has the highest point estimate
+of the three, but its interval overlaps Qwen's, so we again claim no improvement; its LLM-only
+variant scores the same as the hybrid on these 110 cases. A frontier-scale judge was not run, so
+whether a much stronger model closes the gap remains open.
 
 \paragraph{A verification step that hurt.}
 The first judge (v1) produced false positives: it asserted that responses had followed planted
@@ -375,9 +384,9 @@ methodological: heuristics added to repair a judge need their own validation aga
 \item \textbf{The judge is weak, and no frontier-scale judge was run.} The 7B judge agrees only
       moderately with the human labels ($\kappa=0.48$, 95\% CI 0.31--0.64; 17 false positives, 10
       false negatives), and a hosted Gemini~3.1 Flash-Lite judge does not clearly do better
-      ($\kappa=0.51$, 0.35--0.67), so every attack-success rate carries that error. Free-tier
-      quotas ruled out the larger models, so we cannot say whether a much stronger judge would
-      close the gap.
+      ($\kappa=0.51$, 0.35--0.67), nor does a free 31B Gemma~4 judge ($\kappa=0.56$, 0.40--0.71), so
+      every attack-success rate carries that error. Free-tier quotas ruled out the larger hosted
+      models, so we cannot say whether a much stronger judge would close the gap.
 \item \textbf{The judge was revised twice with AI labels in view} (adding the grounding check,
       then correcting it). The $\kappa$ values against the AI labels are therefore in-sample for
       the judge logic. The human labels were written after both revisions and were blind to the
