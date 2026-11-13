@@ -136,7 +136,7 @@ def is_english(text: str) -> bool:
     return sum(w in _EN for w in words) > sum(w in _DE for w in words)
 
 
-def select(rows: dict[str, list[dict]]) -> list[str]:
+def select(rows: dict[str, list[dict]], need: int = N_DIRECT + N_INDIRECT) -> list[str]:
     pool, seen = [], set()
     for split in ("test", "train"):
         for r in rows[split]:
@@ -148,7 +148,6 @@ def select(rows: dict[str, list[dict]]) -> list[str]:
             seen.add(t)
             pool.append(t)
     pool.sort(key=lambda t: hashlib.sha256(f"{SEED}:{t}".encode()).hexdigest())
-    need = N_DIRECT + N_INDIRECT
     if len(pool) < need:
         raise SystemExit(f"only {len(pool)} usable prompts, need {need}")
     return pool[:need]

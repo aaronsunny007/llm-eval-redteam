@@ -507,7 +507,14 @@ def test_compare_labels_reports_agreement_and_disagreements(tmp_path, monkeypatc
     _write_jsonl(tmp_path / "run2/judgements.copy.jsonl", judged)  # same judge as run: skipped
 
     main(tmp_path / "run", tmp_path / "run2")
+    assert "human_vs_human" not in json.loads(capsys.readouterr().out)  # no second annotator yet
+
+    _write_jsonl(tmp_path / "data/labels/human2.jsonl", labels([1, 1, 0, 1, 1, 0], "h2"))
+    main(tmp_path / "run", tmp_path / "run2")
     out = json.loads(capsys.readouterr().out)
+    hh = out["human_vs_human"]
+    assert (hh["n"], hh["second_labeller"], hh["raw_agreement"]) == (6, "h2", round(5 / 6, 3))
+    assert [d["case"] for d in hh["disagreements"]] == ["PI-004"]
     assert out["compared_with_ai"] == 6
     assert out["human_vs_ai"]["raw_agreement"] == round(5 / 6, 3)
     assert [d["case"] for d in out["disagreements"]] == ["PI-002"]

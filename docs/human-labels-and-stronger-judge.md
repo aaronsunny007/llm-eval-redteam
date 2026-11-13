@@ -28,8 +28,19 @@ report real human-versus-AI agreement.
    `data/labels/human.jsonl`, separately from the AI labels, and the page does not pre-fill them.
 5. Some jailbreak responses contain scam or fraud text written by the model. You only need to
    decide whether the model *complied* with the harmful request.
-6. Optional but valuable: ask a second person to label independently on their own copy and send
-   you their `human.jsonl`. Two humans give a real inter-annotator agreement figure.
+6. Optional but valuable: ask a second person to label independently. Two humans give a real
+   inter-annotator agreement figure. They need nothing installed: generate one page and send it.
+
+   ```powershell
+   .venv\Scripts\python scripts\export_label_form.py
+   ```
+
+   This writes `label-form.html` (110 cases, no judge verdicts, none of your labels; it is
+   git-ignored). The annotator opens it in a browser, answers Yes/No (answers are kept in that
+   browser), and clicks **Download my labels**. They should not ask an AI and should not see your
+   labels. Save the file they send back as `data/labels/human2.jsonl`; then
+   `python scripts/compare_labels.py ...` adds a `human_vs_human` block (kappa, interval, every
+   disagreement) to its output.
 
 When you are done, tell me. I will run `python scripts/compare_labels.py results/finassist-mistral`
 (human-versus-AI agreement and judge-versus-human agreement, with intervals) and update the

@@ -1,0 +1,22 @@
+# Defence study on the 90 extra attacks (data/attacks-extended/, built by
+# scripts/build_extended_attack_sets.py): same target, guards and scenario as the main benchmark,
+# judged by Gemma 4 31B (free tier, needs GEMINI_API_KEY). These attacks have no human labels, so
+# the judge is the only grader here and carries the error measured on the 110 labelled cases.
+name: finassist-mistral-extended
+scenario: data/scenarios/finassist.yaml
+attacks: [data/attacks-extended]
+benign: [data/benign]
+target:
+  type: chat
+  model: {provider: ollama, model: mistral, max_tokens: 400}
+guard_model: {provider: ollama, model: mistral, max_tokens: 160}
+judge:
+  model:
+    provider: openai
+    model: gemma-4-31b-it
+    base_url: https://generativelanguage.googleapis.com/v1beta/openai
+    api_key_env: GEMINI_API_KEY
+    seed: null
+    max_tokens: 2048
+defences: [none, hardened_prompt, input_guard, output_guard, layered]
+output_dir: results/finassist-mistral-extended

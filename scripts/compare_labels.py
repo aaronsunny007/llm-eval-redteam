@@ -61,6 +61,30 @@ def main(run: Path, *extra_runs: Path) -> None:
         ],
     }
 
+    second_file = Path("data/labels/human2.jsonl")  # a second annotator's labels, if supplied
+    if second_file.exists():
+        h2 = {g["case_id"]: g for g in read(second_file)}
+        both = sorted(set(human) & set(h2))
+        x, y = [human[c]["attack_success"] for c in both], [h2[c]["attack_success"] for c in both]
+        ag2 = agreement(x, y)
+        out["human_vs_human"] = {
+            "n": len(both),
+            "second_labeller": h2[both[0]].get("labeller", "") if both else "",
+            "raw_agreement": round((ag2.tp + ag2.tn) / len(both), 3) if both else None,
+            "kappa": round(ag2.kappa, 3) if both else None,
+            "kappa_ci95": bootstrap_kappa(x, y) if both else None,
+            "disagreements": [
+                {
+                    "case": c,
+                    "first": human[c]["attack_success"],
+                    "second": h2[c]["attack_success"],
+                    "second_note": h2[c].get("note", ""),
+                }
+                for c in both
+                if human[c]["attack_success"] != h2[c]["attack_success"]
+            ],
+        }
+
     gold = {c: human[c]["attack_success"] for c in common}
     judges = {}
     seen = set()  # judge identities already included, so a shared keyword judge is not repeated
